@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="محفظتي">
+<title>محفظة الشهر</title>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3f1;--card:#fff;--ink:#12302f;--mut:#6b8280;--acc:#0f5a52;--on:#fff;--gold:#f2b134;--line:#d9e4e1;--bad:#b3392f;--up:#1d9a52;--down:#c8372d;--heroUp:#15924a;--heroDown:#c0392b;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1b1a;--card:#152827;--ink:#e6f1ee;--mut:#8aa5a1;--acc:#2aa597;--on:#06201d;--line:#24403d;--bad:#ff8a7e;--up:#3ddc84;--down:#ff6b5e;--heroUp:#17844a;--heroDown:#a8342a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d1b1a;--card:#152827;--ink:#e6f1ee;--mut:#8aa5a1;--acc:#2aa597;--on:#06201d;--line:#24403d;--bad:#ff8a7e;--up:#3ddc84;--down:#ff6b5e;--heroUp:#17844a;--heroDown:#a8342a;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Readex Pro",Tahoma,Arial,sans-serif;max-width:560px;margin-inline:auto;padding:14px 14px 40px}
+.hero{background:var(--acc);color:var(--on);border-radius:22px;padding:22px 20px;text-align:center}
+.hero small{opacity:.85;font-size:15px}
+.bal{font-size:56px;font-weight:700;line-height:1.15;margin:4px 0}
+.bal span{font-size:20px;font-weight:400;margin-inline-start:6px}
+.sub{display:flex;justify-content:center;gap:18px;font-size:14px;opacity:.9}
+.tom{margin-top:12px;text-align:center;color:var(--mut);font-size:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.pk{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.pk small{display:block;color:var(--mut);font-size:13px}
+.pk b{display:block;font-size:30px;line-height:1.2;margin-top:2px}
+.pk em{font-style:normal;color:var(--mut);font-size:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px}
+h2{font-size:15px;margin:0 0 10px}
+.spend{display:flex;gap:8px;flex-wrap:wrap}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+#amt{flex:1;min-width:90px;font-size:20px}#pk{flex:1.3;min-width:120px}#note{flex:1 1 100%}
+.btn{font:inherit;font-weight:600;border:0;border-radius:12px;padding:13px 18px;background:var(--gold);color:#2b1d00;flex:1 1 100%}
+.h{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);gap:8px;align-items:center}
+.h:first-of-type{border-top:0}
+.h span:first-child{flex:1}
+.h small{color:var(--mut)}
+.h button{border:0;background:none;color:var(--mut);font-size:22px;padding:4px 8px}
+.neg{color:var(--bad);font-weight:600}
+.empty,.hint{color:var(--mut);font-size:13px;margin:8px 0 0}
+.dh,.dr{display:grid;grid-template-columns:26px 1fr 52px;gap:6px;align-items:center}
+.dh{font-size:12px;color:var(--mut);padding-bottom:6px}
+.dr{padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.dr small{display:block;color:var(--mut);font-size:12px}
+.dr b{text-align:center}
+.dr.past{opacity:.45}
+.dr.now{background:var(--acc);color:var(--on);border-radius:10px;padding-inline:8px;border-top-color:transparent;font-weight:600}
+.dr.now small{color:var(--on);opacity:.85}
+#netDay{width:80px;margin-inline-start:8px}
+.reset{display:block;margin:20px auto 0;background:none;border:0;color:var(--mut);font:inherit;font-size:13px;text-decoration:underline}
+
+/* حركة الزيادة والنقص */
+.hero{position:relative;overflow:hidden}
+
+.hero.up{animation:heroUp 1.5s ease-out}
+.hero.down{animation:heroDown 1.5s ease-out}
+@keyframes heroUp{0%,30%{background:var(--heroUp);box-shadow:0 0 0 6px color-mix(in srgb,var(--up) 35%,transparent)}}
+@keyframes heroDown{0%,30%{background:var(--heroDown);box-shadow:0 0 0 6px color-mix(in srgb,var(--down) 35%,transparent)}}
+.hero.up .bal{animation:pop .55s cubic-bezier(.3,1.6,.5,1)}
+.hero.down .bal{animation:shake .45s ease-in-out}
+@keyframes pop{40%{transform:scale(1.13)}}
+@keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.pk{position:relative;overflow:hidden}
+.pk.up{animation:pkUp 1.5s ease-out}
+.pk.down{animation:pkDown 1.5s ease-out}
+@keyframes pkUp{0%,30%{border-color:var(--up);background:color-mix(in srgb,var(--up) 14%,var(--card))}}
+@keyframes pkDown{0%,30%{border-color:var(--down);background:color-mix(in srgb,var(--down) 14%,var(--card))}}
+.pk.up b{animation:txtUp 1.5s ease-out}
+.pk.down b{animation:txtDown 1.5s ease-out}
+@keyframes txtUp{0%,40%{color:var(--up)}}
+@keyframes txtDown{0%,40%{color:var(--down)}}
+.delta{direction:ltr;unicode-bidi:isolate;position:absolute;bottom:12px;inset-inline-end:14px;font-weight:700;font-size:15px;pointer-events:none;animation:floatUp 1.7s ease-out forwards}
+.delta.up{color:var(--up)}.delta.down{color:var(--down)}
+.hero .delta{bottom:auto;top:16px;font-size:18px;padding:3px 10px;border-radius:999px;color:#fff}
+.hero .delta.up{background:rgba(255,255,255,.22)}
+.hero .delta.down{background:rgba(0,0,0,.22)}
+@keyframes floatUp{0%{opacity:0;transform:translateY(10px)}15%{opacity:1;transform:translateY(0)}70%{opacity:1}100%{opacity:0;transform:translateY(-22px)}}
+.h.new{animation:rowIn .5s ease-out}
+@keyframes rowIn{0%{opacity:0;transform:translateY(-8px);background:color-mix(in srgb,var(--down) 18%,transparent)}60%{opacity:1;transform:none;background:color-mix(in srgb,var(--down) 10%,transparent)}}
+.h.gone{transition:opacity .25s,transform .25s;opacity:0;transform:translateX(30px)}
+.btn{transition:transform .12s}.btn:active{transform:scale(.97)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:14px;font-size:14px;max-width:90vw;text-align:center;z-index:9;box-shadow:0 6px 24px rgba(0,0,0,.25);animation:floatUp 4s ease-out forwards}
+.ap{font-size:11px;background:var(--line);color:var(--mut);border-radius:6px;padding:1px 6px;margin-inline-start:4px}
+#apPk{margin-top:6px}
+@media(prefers-reduced-motion:reduce){.hero .bal,.delta,.h.new{animation:none!important}.delta{display:none}}
+</style>
+</head>
+<body>
+<div class="hero">
+  <small>اللي معك الحين</small>
+  <div class="bal"><b id="bal">0</b><span aria-label="ريال">⃁</span></div>
+</div>
+
+<div class="grid" id="pockets"></div>
+
+<div class="card">
+  <h2>صرفت شي؟</h2>
+  <div class="spend">
+    <input id="amt" type="number" inputmode="decimal" placeholder="المبلغ">
+    <select id="pk"></select>
+    <input id="note" type="text" placeholder="على ايش؟ (اختياري)">
+    <button class="btn" id="add">اخصم</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>سجل المصروفات</h2>
+  <div id="log"></div>
+</div>
+
+<div class="card">
+  <h2>كم ينزل لك كل يوم</h2>
+  <div class="dh"><span>يوم</span><span>التاريخ</span><span>ينزل</span></div>
+  <div id="days"></div>
+</div>
+
+<div class="card">
+  <h2>بداية الشهر</h2>
+  <input id="start" type="date">
+  <p class="hint">كل مبلغ ينزل في مكانه وقت يومه: الأيام العادية 3 ⃁ لأربعة أيام، والاكل 20 ينزل أول يوم من الأسبوع وتصرفه أي يوم، والويكند 50 ينزل في اليوم الخامس، وتتكرر كل 7 أيام. ابدأ من يوم أحد عشان الويكند ينزل الخميس.</p>
+  <p class="hint">النت (60 ⃁) ينزل في اليوم رقم: <input id="netDay" type="number" inputmode="numeric" min="1" max="30"></p>
+  <p class="hint">مشتريات آبل باي تنخصم تلقائياً من: <br><select id="apPk"></select></p>
+</div>
+
+<button class="reset" id="reset">مسح كل شي وبداية شهر جديد</button>
+
+<script>
+var KEY="wallet-v2",st=null;
+var W=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"],M=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+var PK=[
+ {k:"n",name:"الأيام العادية",s:"عادي",f:function(d){return ((d-1)%7)<4?3:0}},
+ {k:"f",name:"اكل وسط الأسبوع",s:"اكل",f:function(d){return ((d-1)%7)===0?20:0}},
+ {k:"w",name:"الويكند",s:"ويكند",f:function(d){return ((d-1)%7)===4?50:0}},
+ {k:"t",name:"النت",s:"نت",f:function(d){return d===st.netDay?60:0}}
+];
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function parse(s){var a=s.split("-");return new Date(+a[0],+a[1]-1,+a[2])}
+function lastSun(){var d=new Date();d.setDate(d.getDate()-d.getDay());return iso(d)}
+try{st=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!st||!st.start){st={start:lastSun(),spent:[],netDay:18};save()}
+if(!st.netDay)st.netDay=18;
+function dayNo(){var t=new Date();t=new Date(t.getFullYear(),t.getMonth(),t.getDate());return Math.round((t-parse(st.start))/864e5)+1}
+function amtP(p,d){return d>=1&&d<=30?p.f(d):0}
+function amt(d){var s=0;PK.forEach(function(p){s+=amtP(p,d)});return s}
+function accP(p,n){n=Math.min(n,30);var s=0;for(var d=1;d<=n;d++)s+=p.f(d);return s}
+function spentP(k){var s=0;st.spent.forEach(function(x){if((x.p||"n")===k)s+=x.a});return s}
+function fmt(n){return (Math.round(n*100)/100).toString()}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var RM=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches,prev=null,newId=null;
+function kick(el,c){el.classList.remove("up","down");void el.offsetWidth;el.classList.add(c)}
+function chip(par,d){var s=document.createElement("span");s.className="delta "+(d>0?"up":"down");s.textContent=(d>0?"+":"−")+fmt(Math.abs(d));par.appendChild(s);setTimeout(function(){s.remove()},1800)}
+function countTo(el,a,b){
+  if(el._raf)cancelAnimationFrame(el._raf);
+  if(RM){el.textContent=fmt(b);return}
+  var t0=performance.now(),whole=a%1===0&&b%1===0;
+  (function step(t){var p=Math.min(1,(t-t0)/750),e=1-Math.pow(1-p,3),v=a+(b-a)*e;
+    el.textContent=p<1&&whole?Math.round(v):fmt(p<1?v:b);
+    if(p<1)el._raf=requestAnimationFrame(step)})(t0);
+}
+function changed(el,numEl,a,b,boxForChip){var d=b-a;if(Math.abs(d)<.005)return;kick(el,d>0?"up":"down");countTo(numEl,a,b);chip(boxForChip||el,d)}
+function shortOf(k){var r="";PK.forEach(function(p){if(p.k===k)r=p.s});return r}
+var sel=document.getElementById("pk");
+sel.innerHTML=PK.map(function(p){return '<option value="'+p.k+'">'+p.name+'</option>'}).join("");
+var apSel=document.getElementById("apPk");apSel.innerHTML=sel.innerHTML;
+apSel.onchange=function(){st.apPk=this.value;save()};
+
+function render(){
+  var n=dayNo(),tin=0,tout=0,html="",cur={t:0,p:{}};
+  PK.forEach(function(p){
+    var a=accP(p,n),o=spentP(p.k),b=a-o,nx=amtP(p,n+1);
+    tin+=a;tout+=o;
+    cur.p[p.k]=b;
+    html+='<div class="pk" id="pk-'+p.k+'"><small>'+p.name+'</small><b class="'+(b<0?"neg":"")+'">'+fmt(b)+'</b>'+(nx&&n>=0?'<em>بكرة +'+nx+'</em>':'')+'</div>';
+  });
+  document.getElementById("pockets").innerHTML=html;
+  cur.t=tin-tout;
+  var tb=document.getElementById("bal");tb.textContent=fmt(cur.t);tb.style.color=cur.t<0?"#ffb4aa":"";
+  var base=prev||st.seen,first=!prev;
+  if(base){
+    var go=function(){
+      changed(document.querySelector(".hero"),tb,base.t,cur.t);
+      PK.forEach(function(p){var el=document.getElementById("pk-"+p.k);if(el&&base.p&&p.k in base.p)changed(el,el.querySelector("b"),base.p[p.k],cur.p[p.k])});
+    };
+    if(first&&Math.abs(base.t-cur.t)>=.005){
+      tb.textContent=fmt(base.t);
+      PK.forEach(function(p){var el=document.getElementById("pk-"+p.k);if(el&&base.p&&p.k in base.p)el.querySelector("b").textContent=fmt(base.p[p.k])});
+      setTimeout(go,450);
+    }else if(!first)go();
+  }
+  prev=cur;st.seen=cur;save();
+  document.getElementById("start").value=st.start;
+  document.getElementById("netDay").value=st.netDay;
+  apSel.value=st.apPk||"n";
+  var rows="";
+  for(var d=1;d<=30;d++){
+    var a=amt(d),parts=[];
+    PK.forEach(function(p){var v=amtP(p,d);if(v)parts.push(p.s+" "+v)});
+    var dt=parse(st.start);dt.setDate(dt.getDate()+d-1);
+    rows+='<div class="dr'+(d===n?" now":d<n?" past":"")+'"><span>'+d+'</span><span>'+W[dt.getDay()]+" "+dt.getDate()+" "+M[dt.getMonth()]+'<small>'+(parts.join(" · ")||"—")+'</small></span><b>'+(a?"+"+a:"—")+'</b></div>';
+  }
+  document.getElementById("days").innerHTML=rows;
+  var log=document.getElementById("log");
+  if(!st.spent.length){log.innerHTML='<div class="empty">ما صرفت شي للحين.</div>'}
+  else{log.innerHTML=st.spent.slice().reverse().map(function(x){
+    return '<div class="h'+(x.id===newId?" new":"")+'"><span>'+(x.n?esc(x.n):"مصروف")+' <small>'+shortOf(x.p||"n")+'</small>'+(x.src==="ap"?'<span class="ap">آبل باي</span>':'')+'</span><span class="neg">−'+fmt(x.a)+'</span><button data-del="'+x.id+'" aria-label="حذف">×</button></div>'}).join("")}
+  newId=null;
+}
+document.addEventListener("click",function(e){
+  var d=e.target.closest("[data-del]");
+  if(d){var k=+d.getAttribute("data-del"),row=d.closest(".h");if(row)row.classList.add("gone");
+    setTimeout(function(){st.spent=st.spent.filter(function(x){return x.id!==k});save();render()},RM?0:230)}
+});
+document.getElementById("add").onclick=function(){
+  var a=parseFloat(document.getElementById("amt").value);
+  if(!(a>0)){document.getElementById("amt").focus();return}
+  newId=Date.now();st.spent.push({id:newId,a:a,p:sel.value,n:document.getElementById("note").value.trim()});
+  document.getElementById("amt").value="";document.getElementById("note").value="";
+  save();render();
+};
+document.getElementById("netDay").onchange=function(){var v=parseInt(this.value,10);if(v>=1&&v<=30){st.netDay=v;save();render()}};
+document.getElementById("start").onchange=function(){if(this.value){st.start=this.value;save();render()}};
+document.getElementById("reset").onclick=function(){
+  if(confirm("تبي تمسح كل المصروفات وتبدأ شهر جديد من اليوم؟")){var keep=st.seen;st={start:lastSun(),spent:[],netDay:18,seen:keep,apPk:st.apPk,done:st.done};save();render()}
+};
+
+/* ===== ربط آبل باي عبر تطبيق الاختصارات =====
+   الاختصار يفتح الرابط بهالشكل:
+   wallet.html#ap=المبلغ&n=التاجر&p=الجيب&id=رقم-مميز
+   ap = المبلغ (يقبل "SAR 12.50" أو "١٢٫٥٠ ر.س." أو 12.5)
+   n  = اسم المتجر (اختياري)
+   p  = الجيب: n/f/w/t أو عادي/اكل/ويكند/نت (اختياري، الافتراضي من الإعدادات)
+   id = رقم مميز عشان ما تنخصم العملية مرتين (اختياري) */
+function normNum(v){
+  v=String(v||"").replace(/[\u0660-\u0669]/g,function(c){return c.charCodeAt(0)-1632})
+    .replace(/[\u06F0-\u06F9]/g,function(c){return c.charCodeAt(0)-1776})
+    .replace(/\u066B/g,".").replace(/[\u066C,](?=\d{3}(\D|$))/g,"").replace(/,/g,".");
+  var m=v.match(/\d+(?:\.\d+)?/);return m?parseFloat(m[0]):NaN;
+}
+function pkOf(v){v=String(v||"").trim();var r=null;PK.forEach(function(p){if(v&&(p.k===v||p.s===v||p.name===v))r=p.k});return r||st.apPk||"n"}
+function nameOf(k){var r="";PK.forEach(function(p){if(p.k===k)r=p.name});return r}
+function toast(t){var d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(function(){d.remove()},4000)}
+function incoming(){
+  var h=location.hash.replace(/^#/,"")||location.search.replace(/^\?/,"");
+  if(!h)return false;
+  var q={};h.split("&").forEach(function(kv){var i=kv.indexOf("=");if(i<0)return;var k=kv.slice(0,i),v=kv.slice(i+1).replace(/\+/g," ");try{v=decodeURIComponent(v)}catch(e){}q[k]=v});
+  if(!("ap" in q))return false;
+  try{history.replaceState(null,"",location.pathname)}catch(e){}
+  var a=normNum(q.ap);
+  if(!(a>0)){toast("ما قدرت أقرا المبلغ: "+q.ap);return false}
+  var key=q.id||(a+"|"+(q.n||"")+"|"+Math.floor(Date.now()/6e4));
+  st.done=st.done||[];
+  if(st.done.indexOf(key)>=0)return false;
+  st.done.push(key);if(st.done.length>80)st.done=st.done.slice(-80);
+  var p=pkOf(q.p);newId=Date.now();
+  st.spent.push({id:newId,a:a,p:p,n:String(q.n||"").trim(),src:"ap"});save();
+  toast("انخصم "+fmt(a)+" ⃁ من "+nameOf(p)+" (آبل باي)");
+  return true;
+}
+window.addEventListener("hashchange",function(){if(incoming())render()});
+incoming();
+render();
+</script>
+</body>
+</html>

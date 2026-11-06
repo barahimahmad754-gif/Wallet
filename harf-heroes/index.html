@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="أبطال الحروف">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>أبطال الحروف</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Baloo+Bhaijaan+2:wght@500;700;800&family=Noto+Naskh+Arabic:wght@700&family=Amiri+Quran&display=swap">
+<style>
+/* Layout: one-screen voxel game shell. Sticky HUD on top, scrolling screen body, full-bleed play areas. One committed daylight look. */
+:root{
+  --sky1:#4FA8EE; --sky2:#C4E9FF; --grass:#4FAE32; --grass-d:#2F7A1E; --dirt:#8A5A33; --dirt-d:#5E3B1F;
+  --stone:#7A828C; --stone-d:#454B54; --gold:#FFC93C; --gold-d:#C98A12; --gem:#38E0D0; --gem-d:#167A70;
+  --ink:#1B2418; --paper:#F3F7EE; --paper-2:#DDE7D3; --red:#E5484D; --red-d:#9E2A2F; --blue:#2E86DE; --violet:#8B6CF0;
+  --night:#1E2547; --night-2:#3B3F7A;
+  --f-display:'Lalezar','Baloo Bhaijaan 2',Tahoma,sans-serif;
+  --f-body:'Baloo Bhaijaan 2',Tahoma,'Segoe UI',sans-serif;
+  --f-letter:'Noto Naskh Arabic','Amiri',Tahoma,serif;
+  --f-quran:'Amiri Quran','Amiri','Noto Naskh Arabic',serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:linear-gradient(180deg,var(--sky1),var(--sky2) 78%);color:var(--ink);font-family:var(--f-body);overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+body::after{content:"";position:fixed;inset:auto 0 0 0;height:22px;background:linear-gradient(var(--grass) 0 8px,var(--grass-d) 8px 11px,var(--dirt) 11px);z-index:0;pointer-events:none}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.cloud{position:fixed;height:22px;background:#fff;opacity:.85;z-index:0;pointer-events:none;box-shadow:22px -12px 0 #fff,44px 0 0 #fff;width:44px;animation:drift 80s linear infinite}
+@keyframes drift{from{transform:translateX(-120px)}to{transform:translateX(120vw)}}
+
+#app{height:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;position:relative;z-index:1}
+.top{display:flex;align-items:center;gap:8px;padding-block:10px 6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app.ingame .top{display:none}
+.me{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.me .av{width:40px;height:44px;background:var(--paper);border:3px solid var(--ink);border-radius:6px;padding:3px;flex:none}
+.me .av svg{width:100%;height:100%;display:block}
+.me .info{min-width:0;flex:1}
+.me .nm{font-family:var(--f-display);font-size:17px;line-height:1.1;color:#fff;text-shadow:0 2px 0 var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lvl{display:flex;align-items:center;gap:6px}
+.lvl b{font-family:var(--f-display);font-weight:400;background:var(--violet);color:#fff;border:2px solid var(--ink);border-radius:4px;padding:0 6px;font-size:14px}
+.xpbar{flex:1;height:10px;background:rgba(27,36,24,.35);border:2px solid var(--ink);border-radius:3px;overflow:hidden;max-width:110px}
+.xpbar i{display:block;height:100%;background:var(--gem);transition:width .6s}
+.cur{display:flex;align-items:center;gap:4px;background:rgba(27,36,24,.75);color:#fff;border:2px solid var(--ink);border-radius:20px;padding:2px 10px 2px 6px;font-family:var(--f-display);font-size:18px;font-variant-numeric:tabular-nums;flex:none}
+.ico{width:20px;height:20px;display:inline-block;vertical-align:middle;flex:none}
+.gear{width:40px;height:40px;border-radius:8px;border:3px solid var(--ink);background:var(--stone);color:#fff;font-size:20px;flex:none;position:relative;overflow:hidden}
+.gear::after{content:"";position:absolute;inset:auto 0 0 0;height:0;background:rgba(255,201,60,.6)}
+.gear.holding::after{height:100%;transition:height 1.4s linear}
+
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;padding-block:6px 44px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));-webkit-overflow-scrolling:touch}
+.screen.full{overflow:hidden;padding-bottom:28px;padding-top:max(10px,env(safe-area-inset-top,0px))}
+
+/* chunky block buttons */
+.btn{--c:var(--grass);font-family:var(--f-display);font-weight:400;font-size:22px;color:#fff;background:var(--c);border:3px solid var(--ink);border-radius:6px;padding:8px 18px;box-shadow:inset 0 -6px 0 rgba(0,0,0,.22),inset 0 4px 0 rgba(255,255,255,.28),0 4px 0 var(--ink);text-shadow:0 2px 0 rgba(0,0,0,.35);transition:transform .06s}
+.btn:active{transform:translateY(3px);box-shadow:inset 0 -4px 0 rgba(0,0,0,.22),inset 0 3px 0 rgba(255,255,255,.28),0 1px 0 var(--ink)}
+.btn.sm{font-size:17px;padding:4px 12px}
+.btn.big{font-size:28px;padding:12px 26px}
+.btn.gold{--c:var(--gold);color:var(--ink);text-shadow:0 2px 0 rgba(255,255,255,.4)}
+.btn.red{--c:var(--red)}
+.btn.blue{--c:var(--blue)}
+.btn.stone{--c:var(--stone)}
+.btn.violet{--c:var(--violet)}
+.btn[disabled]{filter:grayscale(.8);opacity:.6}
+
+.hdr{display:flex;align-items:center;gap:10px;margin-block:6px 12px}
+.hdr h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:30px;color:#fff;text-shadow:0 3px 0 var(--ink)}
+
+.panel{background:var(--paper);border:3px solid var(--ink);border-radius:8px;box-shadow:0 5px 0 var(--ink);padding:14px}
+
+/* HOME */
+.stage{position:relative;height:200px;border:3px solid var(--ink);border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#7CC4F7,#BFE6FF 60%,var(--grass) 60% 66%,var(--dirt) 66%);box-shadow:0 5px 0 var(--ink);width:100%;padding:0;display:block}
+.stage .hero{position:absolute;bottom:58px;right:24%;width:70px}
+.stage .hero svg{width:100%;display:block;filter:drop-shadow(0 4px 0 rgba(0,0,0,.25))}
+.stage .gun{position:absolute;bottom:80px;right:6%;width:92px;transform:rotate(-8deg)}
+.stage .car{position:absolute;bottom:40px;left:12%;width:64px;transform:rotate(90deg)}
+.stage .tag{position:absolute;top:8px;right:10px;font-family:var(--f-display);font-size:16px;background:rgba(27,36,24,.75);color:#fff;border-radius:4px;padding:0 8px}
+.stage .bob{animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.daily{display:flex;align-items:center;gap:12px;margin-top:14px;width:100%;text-align:right;--c:var(--violet)}
+.daily .chest{font-size:38px;animation:wiggle 1.2s ease-in-out infinite}
+@keyframes wiggle{0%,60%,100%{transform:rotate(0)}70%{transform:rotate(-12deg)}80%{transform:rotate(12deg)}90%{transform:rotate(-6deg)}}
+.daily small{display:block;font-family:var(--f-body);font-size:14px;font-weight:700;opacity:.95}
+.worlds{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.wcard{--c:var(--grass);display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px 12px}
+.wcard .glyph{font-family:var(--f-letter);font-size:54px;line-height:1.2}
+.wcard .glyph.q{font-family:var(--f-quran);font-size:40px;line-height:1.6}
+.wcard .t{font-size:24px}
+.wcard .p{font-family:var(--f-body);font-weight:800;font-size:14px;background:rgba(0,0,0,.25);border-radius:10px;padding:0 10px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.row2 .btn{display:flex;align-items:center;justify-content:center;gap:8px}
+.streak{margin-top:14px;display:flex;gap:6px;justify-content:center}
+.streak span{width:34px;height:34px;display:grid;place-items:center;border:3px solid var(--ink);border-radius:6px;background:var(--paper-2);font-family:var(--f-display);font-size:15px}
+.streak span.on{background:var(--gold)}
+
+/* MAPS */
+.world{margin-bottom:18px;border:3px solid var(--ink);border-radius:10px;overflow:hidden;box-shadow:0 5px 0 var(--ink);background:var(--paper)}
+.world h3{margin:0;padding:6px 12px;background:var(--wc);color:#fff;font-family:var(--f-display);font-weight:400;font-size:20px;text-shadow:0 2px 0 rgba(0,0,0,.4);border-bottom:3px solid var(--ink);display:flex;justify-content:space-between;align-items:center}
+.nodes{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:12px}
+.node{position:relative;aspect-ratio:1;max-width:100%;border:3px solid var(--ink);border-radius:6px;background:var(--wc);color:#fff;font-family:var(--f-letter);font-size:clamp(26px,8vw,40px);line-height:1;box-shadow:inset 0 -6px 0 rgba(0,0,0,.22),inset 0 4px 0 rgba(255,255,255,.3),0 4px 0 var(--ink);text-shadow:0 2px 0 rgba(0,0,0,.35);display:grid;place-items:center;padding:0}
+.node.boss{font-size:clamp(22px,7vw,32px);background:var(--stone-d)}
+.node.locked{filter:grayscale(1) brightness(.85);opacity:.55}
+.node.locked::after{content:"🔒";position:absolute;font-size:16px;bottom:-6px;left:-6px;text-shadow:none}
+.node.next{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+.node .st{position:absolute;bottom:-12px;left:0;right:0;font-size:12px;letter-spacing:-1px;font-family:var(--f-body);text-shadow:0 1px 0 var(--ink)}
+.stars{color:var(--gold)} .stars .e{color:#B9C0B2}
+.surah{display:flex;align-items:center;gap:12px;width:100%;text-align:right;margin-bottom:12px;--c:var(--grass-d)}
+.surah .sn{font-family:var(--f-quran);font-size:30px;line-height:1.5}
+.surah .meta{flex:1;display:flex;flex-direction:column;gap:2px}
+.surah .meta small{font-family:var(--f-body);font-weight:700;font-size:14px}
+.surah .num{width:46px;height:46px;flex:none;display:grid;place-items:center;background:var(--gold);color:var(--ink);border:3px solid var(--ink);border-radius:6px;font-size:20px;text-shadow:none}
+.surah.locked{filter:grayscale(1);opacity:.55}
+
+/* SHOP */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px}
+.tab{flex:none;font-family:var(--f-display);font-size:17px;padding:6px 12px;border:3px solid var(--ink);border-radius:6px;background:var(--paper-2);color:var(--ink)}
+.tab.on{background:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:8px;box-shadow:0 4px 0 var(--ink);padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;min-width:0}
+.card .pic{height:84px;width:100%;display:grid;place-items:center;background:linear-gradient(#CFE9FF,#E9F5FF);border:2px solid var(--ink);border-radius:6px}
+.card .pic svg{max-height:70px;max-width:80%}
+.card .pic.car svg{transform:rotate(90deg);max-height:90px}
+.card .nm{font-family:var(--f-display);font-size:18px;text-align:center}
+.card .btn{width:100%;font-size:17px;padding:4px 8px;display:flex;justify-content:center;align-items:center;gap:4px}
+.rar{position:absolute;top:-8px;left:-6px;font-family:var(--f-display);font-size:13px;color:#fff;border:2px solid var(--ink);border-radius:4px;padding:0 6px;background:var(--blue)}
+.rar.epic{background:var(--violet)} .rar.legend{background:var(--gold);color:var(--ink)}
+.upg{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.upg .ic{font-size:34px;width:56px;height:56px;display:grid;place-items:center;border:3px solid var(--ink);border-radius:8px;background:var(--paper-2);flex:none}
+.upg .mid{flex:1;min-width:0}
+.upg .mid b{font-family:var(--f-display);font-weight:400;font-size:19px;display:block}
+.upg .pips{display:flex;gap:4px;margin-top:4px}
+.upg .pips i{width:18px;height:12px;border:2px solid var(--ink);background:var(--paper-2)}
+.upg .pips i.on{background:var(--gem)}
+.boxzone{display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px 10px}
+.mbox{font-size:96px;line-height:1;filter:drop-shadow(0 6px 0 rgba(0,0,0,.3));animation:wiggle 1.6s ease-in-out infinite}
+.odds{font-size:14px;font-weight:700;text-align:center;color:var(--stone-d)}
+
+/* GAME */
+.game{display:flex;flex-direction:column;height:100%;gap:8px}
+.ghud{display:flex;align-items:center;gap:8px}
+.hearts{font-size:20px;letter-spacing:-2px;flex:none}
+.prompt{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;background:var(--paper);border:3px solid var(--ink);border-radius:8px;box-shadow:0 4px 0 var(--ink);padding:2px 10px;min-width:0}
+.prompt .plab{font-family:var(--f-display);font-size:18px}
+.prompt .pl{font-family:var(--f-letter);font-size:42px;line-height:1.25;color:var(--red)}
+.prompt .spk{font-size:22px}
+.gcoins{flex:none}
+.prog{height:14px;border:3px solid var(--ink);border-radius:4px;background:rgba(27,36,24,.3);overflow:hidden}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),#FFE38A);transition:width .3s}
+.area{flex:1;position:relative;overflow:hidden;border:3px solid var(--ink);border-radius:10px;touch-action:none;min-height:0}
+.area.shoot{background:radial-gradient(circle at 20% 15%,rgba(255,255,255,.7) 0 2px,transparent 3px),radial-gradient(circle at 70% 30%,rgba(255,255,255,.6) 0 2px,transparent 3px),radial-gradient(circle at 45% 55%,rgba(255,255,255,.5) 0 2px,transparent 3px),linear-gradient(180deg,var(--night),var(--night-2) 75%,var(--grass) 75% 79%,var(--dirt) 79%);background-size:180px 180px,220px 220px,160px 160px,100% 100%}
+.tgt{position:absolute;left:0;top:0;width:76px;height:76px;display:grid;place-items:center;font-family:var(--f-letter);font-size:44px;line-height:1;color:#fff;background:var(--tc,var(--dirt));border:3px solid var(--ink);border-radius:6px;box-shadow:inset 0 -7px 0 rgba(0,0,0,.25),inset 0 5px 0 rgba(255,255,255,.3);text-shadow:0 3px 0 rgba(0,0,0,.4);will-change:transform;padding-bottom:6px}
+.tgt::before{content:"";position:absolute;top:-14px;left:50%;width:6px;height:11px;margin-left:-3px;background:var(--ink)}
+.tgt::after{content:"";position:absolute;top:-18px;left:50%;width:56px;height:6px;margin-left:-28px;background:var(--stone);border:2px solid var(--ink);border-radius:3px;animation:prop .25s linear infinite}
+@keyframes prop{50%{transform:scaleX(.3)}}
+.tgt.bad{animation:shake .35s}
+@keyframes shake{20%{margin-left:-8px}40%{margin-left:8px}60%{margin-left:-6px}80%{margin-left:6px}}
+.gunwrap{position:absolute;bottom:14px;left:50%;width:96px;height:48px;margin-left:-48px;transform-origin:30% 55%;transition:transform .08s;z-index:3}
+.gunwrap svg{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 0 rgba(0,0,0,.4))}
+.beam{position:absolute;height:8px;margin-top:-4px;transform-origin:0 50%;border-radius:4px;z-index:2;pointer-events:none;animation:beam .22s ease-out forwards;box-shadow:0 0 12px 3px currentColor}
+@keyframes beam{from{opacity:1}to{opacity:0;height:2px}}
+.px{position:absolute;width:12px;height:12px;border:2px solid var(--ink);z-index:2;pointer-events:none;animation:pop .6s ease-out forwards}
+@keyframes pop{to{transform:translate(var(--dx),var(--dy)) rotate(200deg);opacity:0}}
+.ftxt{position:absolute;z-index:5;font-family:var(--f-display);font-size:26px;color:var(--gold);text-shadow:0 2px 0 var(--ink),0 -2px 0 var(--ink),2px 0 0 var(--ink),-2px 0 0 var(--ink);pointer-events:none;animation:rise .9s ease-out forwards;white-space:nowrap}
+@keyframes rise{to{transform:translateY(-60px);opacity:0}}
+.combo{position:absolute;top:10px;left:10px;z-index:5;font-family:var(--f-display);font-size:22px;color:#fff;background:var(--red);border:3px solid var(--ink);border-radius:6px;padding:0 10px;transform:rotate(-6deg)}
+.combo[hidden]{display:none}
+.combo.bump{animation:bump .3s}
+@keyframes bump{50%{transform:rotate(-6deg) scale(1.3)}}
+
+.area.race{background:linear-gradient(90deg,var(--grass) 0 6%,var(--ink) 6% 7%,#5A6270 7% 93%,var(--ink) 93% 94%,var(--grass) 94%)}
+.lanes{position:absolute;inset:0 7%;background-image:repeating-linear-gradient(180deg,#fff 0 34px,transparent 34px 70px),repeating-linear-gradient(180deg,#fff 0 34px,transparent 34px 70px);background-size:6px 70px,6px 70px;background-position:33.3% 0,66.6% 0;background-repeat:repeat-y;opacity:.85}
+.gate{position:absolute;left:0;top:0;width:100%;will-change:transform;z-index:2}
+.gblk{position:absolute;top:0;display:grid;place-items:center;font-family:var(--f-letter);color:#fff;border:3px solid var(--ink);border-radius:6px;background:var(--tc,var(--blue));box-shadow:inset 0 -7px 0 rgba(0,0,0,.25),inset 0 5px 0 rgba(255,255,255,.3);text-shadow:0 3px 0 rgba(0,0,0,.4);line-height:1;padding-bottom:6px}
+.gblk.ok{background:var(--grass);transform:scale(1.2);transition:transform .15s}
+.gblk.no{background:var(--red)}
+.rcar{position:absolute;bottom:16px;left:0;z-index:3;transition:left .16s ease-out;will-change:left}
+.rcar svg{width:100%;height:100%;display:block;filter:drop-shadow(0 4px 0 rgba(0,0,0,.35))}
+.rcar.crash{animation:shake .4s}
+.rcar.boost svg{filter:drop-shadow(0 0 10px var(--gold)) drop-shadow(0 4px 0 rgba(0,0,0,.35))}
+.rcoin{position:absolute;left:0;top:0;width:34px;height:34px;z-index:2;will-change:transform}
+.rcoin svg{width:100%;height:100%;animation:spin 1s linear infinite}
+@keyframes spin{50%{transform:scaleX(.2)}}
+.lanebtns{display:flex;gap:10px;direction:ltr}
+.lanebtns .btn{flex:1;font-size:30px;padding:2px}
+
+/* LEARN */
+.learn{display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:6px}
+.bigl{width:min(64vw,250px);aspect-ratio:1;display:grid;place-items:center;font-family:var(--f-letter);font-size:min(40vw,160px);line-height:1;color:#fff;background:var(--wc,var(--grass));border:4px solid var(--ink);border-radius:12px;box-shadow:inset 0 -12px 0 rgba(0,0,0,.22),inset 0 8px 0 rgba(255,255,255,.3),0 6px 0 var(--ink);text-shadow:0 5px 0 rgba(0,0,0,.35);padding-bottom:20px}
+.bigl.tap{animation:bump .35s}
+.lname{font-family:var(--f-display);font-size:34px;color:#fff;text-shadow:0 3px 0 var(--ink)}
+.forms{display:flex;gap:8px;direction:rtl}
+.forms span{font-family:var(--f-letter);font-size:30px;background:var(--paper);border:3px solid var(--ink);border-radius:6px;padding:0 12px;min-width:56px;text-align:center}
+.wordcard{display:flex;align-items:center;gap:14px;background:var(--paper);border:3px solid var(--ink);border-radius:10px;box-shadow:0 5px 0 var(--ink);padding:6px 18px}
+.wordcard .emo{font-size:52px}
+.wordcard .w{font-family:var(--f-letter);font-size:44px;line-height:1.5}
+.wordcard .hl{color:var(--red)}
+.hint{font-weight:800;color:#fff;text-shadow:0 2px 0 var(--ink);font-size:16px;text-align:center}
+
+/* QURAN */
+.ayat{display:flex;flex-direction:column;gap:10px}
+.basm{font-family:var(--f-quran);font-size:26px;text-align:center;color:#fff;text-shadow:0 2px 0 var(--ink);line-height:2}
+.ayah{display:flex;align-items:center;gap:10px;text-align:right;width:100%;background:var(--paper);border:3px solid var(--ink);border-radius:8px;box-shadow:0 4px 0 var(--ink);padding:6px 12px}
+.ayah .tx{flex:1;font-family:var(--f-quran);font-size:26px;line-height:2.1}
+.ayah .an{width:34px;height:34px;flex:none;display:grid;place-items:center;border:3px solid var(--ink);border-radius:50%;background:var(--gold);font-family:var(--f-display);font-size:16px}
+.ayah.playing{background:#FFF3C4}
+.build{display:flex;flex-direction:column;gap:12px}
+.ghost{font-family:var(--f-quran);font-size:24px;line-height:2.1;text-align:center;color:rgba(27,36,24,.45);background:rgba(243,247,238,.6);border:2px dashed var(--ink);border-radius:8px;padding:4px 10px}
+.wall{min-height:76px;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;padding:10px;background:repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 2px,transparent 2px 40px),var(--paper-2);border:3px solid var(--ink);border-radius:8px}
+.blocks{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.wb{font-family:var(--f-quran);font-size:24px;line-height:1.9;padding:2px 14px;color:var(--ink);background:#E8C07A;border:3px solid var(--ink);border-radius:5px;box-shadow:inset 0 -5px 0 rgba(0,0,0,.18),inset 0 4px 0 rgba(255,255,255,.35),0 4px 0 var(--ink)}
+.wb.placed{background:var(--grass);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.35);box-shadow:inset 0 -5px 0 rgba(0,0,0,.18),inset 0 4px 0 rgba(255,255,255,.3);animation:land .25s}
+@keyframes land{from{transform:translateY(-20px) scale(1.15)}}
+.wb.bad{animation:shake .35s;background:#F4A3A5}
+.wb.glow{animation:glow .7s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 6px var(--gold),0 4px 0 var(--ink)}}
+.wb.gone{visibility:hidden}
+.qtext{font-family:var(--f-quran);font-size:26px;line-height:2.3;text-align:center}
+.blank{display:inline-block;min-width:80px;border-bottom:4px dashed var(--red);margin:0 4px}
+.qstep{font-family:var(--f-display);color:#fff;text-shadow:0 2px 0 var(--ink);font-size:20px;text-align:center}
+
+/* OVERLAY */
+.ov{position:fixed;inset:0;z-index:50;background:rgba(15,20,40,.72);display:grid;place-items:center;padding:20px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px));animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.ovc{width:min(420px,100%);max-height:100%;overflow-y:auto;background:var(--paper);border:4px solid var(--ink);border-radius:12px;box-shadow:0 8px 0 var(--ink);padding:18px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;animation:popin .3s cubic-bezier(.3,1.6,.6,1)}
+@keyframes popin{from{transform:scale(.6)}}
+.ovc h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:38px;color:var(--grass-d)}
+.bigstars{font-size:54px;letter-spacing:4px;line-height:1}
+.bigstars span{display:inline-block;color:#C9CFC2;transition:transform .3s}
+.bigstars span.on{color:var(--gold);text-shadow:0 3px 0 var(--gold-d);animation:starin .45s cubic-bezier(.3,1.8,.6,1) both}
+@keyframes starin{from{transform:scale(0) rotate(-90deg)}}
+.earn{display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-size:40px;font-variant-numeric:tabular-nums}
+.earn .ico{width:38px;height:38px}
+.btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.chestbtn{font-size:70px;line-height:1;background:none;border:0;animation:wiggle .9s ease-in-out infinite;filter:drop-shadow(0 5px 0 rgba(0,0,0,.3))}
+.reveal{font-family:var(--f-display);font-size:30px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.reveal .rbadge{font-size:16px;color:#fff;border:2px solid var(--ink);border-radius:4px;padding:0 10px;background:var(--blue)}
+.reveal .rbadge.epic{background:var(--violet)} .reveal .rbadge.legend{background:var(--gold);color:var(--ink)}
+.reveal .rpic{width:120px;height:90px;display:grid;place-items:center}
+.reveal .rpic svg{max-width:100%;max-height:100%}
+.burst{animation:burst .5s ease-out}
+@keyframes burst{0%{transform:scale(.2);filter:brightness(3)}}
+.shakebox{animation:boxshake .9s ease-in-out}
+@keyframes boxshake{10%,50%,90%{transform:rotate(-14deg) scale(1.05)}30%,70%{transform:rotate(14deg) scale(1.1)}100%{transform:scale(1.3)}}
+.field{width:100%;font-family:var(--f-body);font-size:20px;font-weight:700;padding:8px 12px;border:3px solid var(--ink);border-radius:6px;background:#fff;color:var(--ink);text-align:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.chip{font-family:var(--f-display);font-size:16px;padding:4px 12px;border:3px solid var(--ink);border-radius:6px;background:var(--paper-2)}
+.chip.on{background:var(--gold)}
+.set{width:100%;display:flex;flex-direction:column;gap:6px;text-align:right}
+.set label{font-weight:800}
+.muted{font-size:14px;color:var(--stone-d);font-weight:700}
+.toast{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:60;background:var(--ink);color:#fff;font-weight:800;padding:8px 16px;border-radius:8px;animation:fade .2s;max-width:90vw;text-align:center}
+.cf{position:fixed;top:-20px;width:12px;height:12px;z-index:70;pointer-events:none;border:2px solid var(--ink);animation:fall linear forwards}
+@keyframes fall{to{transform:translate(var(--dx),110vh) rotate(720deg)}}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .cf{display:none}
+}
+</style>
+
+<div class="cloud" style="top:12%;animation-duration:95s"></div>
+<div class="cloud" style="top:38%;animation-duration:130s;animation-delay:-60s"></div>
+<div class="cloud" style="top:64%;animation-duration:110s;animation-delay:-30s"></div>
+
+<div id="app" dir="rtl" lang="ar">
+  <div class="top" id="top"></div>
+  <div class="screen" id="screen"></div>
+</div>
+
+<script>
+'use strict';
+/* ================= DATA ================= */
+const LETTERS=[
+ ['ا','ألف','أرنب','🐇'],['ب','باء','بطة','🦆'],['ت','تاء','تفاحة','🍎'],['ث','ثاء','ثعلب','🦊'],
+ ['ج','جيم','جمل','🐪'],['ح','حاء','حصان','🐴'],['خ','خاء','خروف','🐑'],['د','دال','دب','🐻'],
+ ['ذ','ذال','ذرة','🌽'],['ر','راء','رسالة','✉️'],['ز','زاي','زرافة','🦒'],['س','سين','سمكة','🐟'],
+ ['ش','شين','شمس','☀️'],['ص','صاد','صاروخ','🚀'],['ض','ضاد','ضفدع','🐸'],['ط','طاء','طائرة','✈️'],
+ ['ظ','ظاء','ظبي','🦌'],['ع','عين','عنب','🍇'],['غ','غين','غيمة','☁️'],['ف','فاء','فيل','🐘'],
+ ['ق','قاف','قطة','🐱'],['ك','كاف','كرة','⚽'],['ل','لام','ليمون','🍋'],['م','ميم','موز','🍌'],
+ ['ن','نون','نحلة','🐝'],['ه','هاء','هدية','🎁'],['و','واو','وردة','🌹'],['ي','ياء','يد','✋']
+];
+const WORLDS=[
+ {name:'عالم العشب',c:'#4FAE32'},{name:'عالم الصحراء',c:'#D99A2B'},{name:'عالم الثلج',c:'#3FA7D6'},
+ {name:'عالم الكهوف',c:'#6B7380'},{name:'عالم البحر',c:'#2462B8'},{name:'عالم البركان',c:'#D9482B'},{name:'عالم السماء',c:'#8B6CF0'}
+];
+const BASMALA='بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
+const SURAHS=[
+ {id:108,name:'الكوثر',ayat:['إِنَّا أَعْطَيْنَاكَ الْكَوْثَرَ','فَصَلِّ لِرَبِّكَ وَانْحَرْ','إِنَّ شَانِئَكَ هُوَ الْأَبْتَرُ']},
+ {id:112,name:'الإخلاص',ayat:['قُلْ هُوَ اللَّهُ أَحَدٌ','اللَّهُ الصَّمَدُ','لَمْ يَلِدْ وَلَمْ يُولَدْ','وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ']},
+ {id:103,name:'العصر',ayat:['وَالْعَصْرِ','إِنَّ الْإِنْسَانَ لَفِي خُسْرٍ','إِلَّا الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ وَتَوَاصَوْا بِالْحَقِّ وَتَوَاصَوْا بِالصَّبْرِ']},
+ {id:113,name:'الفلق',ayat:['قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ','مِنْ شَرِّ مَا خَلَقَ','وَمِنْ شَرِّ غَاسِقٍ إِذَا وَقَبَ','وَمِنْ شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ','وَمِنْ شَرِّ حَاسِدٍ إِذَا حَسَدَ']},
+ {id:114,name:'الناس',ayat:['قُلْ أَعُوذُ بِرَبِّ النَّاسِ','مَلِكِ النَّاسِ','إِلَٰهِ النَّاسِ','مِنْ شَرِّ الْوَسْوَاسِ الْخَنَّاسِ','الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ','مِنَ الْجِنَّةِ وَالنَّاسِ']},
+ {id:1,name:'الفاتحة',ayat:['بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ','الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ','الرَّحْمَٰنِ الرَّحِيمِ','مَالِكِ يَوْمِ الدِّينِ','إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ','اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ','صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ']}
+];
+const CARS=[
+ {id:'c1',name:'سيارة الحي',price:0,body:'#E5484D',roof:'#B8323A',stripe:'#FFFFFF'},
+ {id:'c2',name:'جيب الصحراء',price:300,body:'#C9A15A',roof:'#7C5E2E',stripe:'#3B2A14',rar:'rare'},
+ {id:'c3',name:'سيارة السباق',price:800,body:'#2E86DE',roof:'#1B4F8A',stripe:'#FFC93C',rar:'rare'},
+ {id:'c4',name:'سيارة الشرطة',price:1500,body:'#F3F7EE',roof:'#1B2418',stripe:'#1B2418',police:1,rar:'epic'},
+ {id:'c5',name:'شاحنة الوحش',price:2500,body:'#4FAE32',roof:'#2F7A1E',stripe:'#1B2418',big:1,rar:'epic'},
+ {id:'c6',name:'السيارة الذهبية',gems:40,body:'#FFC93C',roof:'#C98A12',stripe:'#FFFFFF',rar:'legend'}
+];
+const BLASTERS=[
+ {id:'b1',name:'مسدس الماء',price:0,body:'#2E86DE',acc:'#8FD3F4',dark:'#1B4F8A',beam:'#8FD3F4'},
+ {id:'b2',name:'بلاستر الليزر',price:400,body:'#4A5059',acc:'#FF4D6D',dark:'#1B2418',beam:'#FF4D6D',rar:'rare'},
+ {id:'b3',name:'مدفع الفقاعات',price:900,body:'#F78FB3',acc:'#FFFFFF',dark:'#B33771',beam:'#FFD1E8',rar:'rare'},
+ {id:'b4',name:'قاذف البرق',price:2000,body:'#3D3D6B',acc:'#FFE94D',dark:'#1B2418',beam:'#FFE94D',rar:'epic'},
+ {id:'b5',name:'بلاستر الألماس',gems:35,body:'#38E0D0',acc:'#E0FFFC',dark:'#167A70',beam:'#38E0D0',rar:'epic'},
+ {id:'b6',name:'البلاستر الذهبي',gems:60,body:'#FFC93C',acc:'#FFF3C4',dark:'#C98A12',beam:'#FFC93C',rar:'legend'}
+];
+const SKINS=[
+ {id:'s1',name:'البطل',price:0,hair:'#3B2A14',skin:'#E8B98A',shirt:'#E5484D'},
+ {id:'s2',name:'النينجا',price:500,hair:'#1B2418',skin:'#E8B98A',shirt:'#1B2418',type:'ninja',rar:'rare'},
+ {id:'s3',name:'رائد الفضاء',price:1200,hair:'#5A3A1C',skin:'#E8B98A',shirt:'#F3F7EE',type:'astro',rar:'epic'},
+ {id:'s4',name:'الفارس',price:2000,hair:'#9AA3AD',skin:'#E8B98A',shirt:'#2462B8',type:'knight',rar:'epic'},
+ {id:'s5',name:'المستكشف',price:700,hair:'#C98A12',skin:'#C68A5E',shirt:'#4FAE32',rar:'rare'},
+ {id:'s6',name:'البطل الذهبي',gems:50,hair:'#FFC93C',skin:'#E8B98A',shirt:'#FFC93C',type:'knight',rar:'legend'}
+];
+const UPGRADES=[
+ {id:'coin',name:'مكافأة العملات',icon:'💰',max:5,base:200,desc:l=>`+${l*20}% عملات في كل مرحلة`},
+ {id:'power',name:'قوة الضربة',icon:'⚡',max:5,base:250,desc:l=>`+${l*2} عملات لكل إصابة`},
+ {id:'heart',name:'قلوب إضافية',icon:'❤️',max:2,base:500,desc:l=>`${3+l} قلوب في كل لعبة`}
+];
+const RAR={rare:'نادر',epic:'أسطوري',legend:'خارق'};
+const BOX_PRICE=120;
+
+/* ================= STATE ================= */
+const KEY='harf-heroes-v1';
+function defState(){return{name:'البطل',coins:100,gems:5,xp:0,lvl:1,letters:{},boss:{},surahs:{},owned:['c1','b1','s1'],equip:{car:'c1',blaster:'b1',skin:'s1'},upg:{coin:0,heart:0,power:0},daily:{last:'',streak:0},play:{date:'',sec:0,extra:0},settings:{limit:20,sound:true,voice:true},boxes:0}}
+function load(){
+  const d=defState();
+  try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);
+    for(const k in d){if(o[k]!==undefined){d[k]=(typeof d[k]==='object'&&!Array.isArray(d[k]))?Object.assign(d[k],o[k]):o[k]}}}}catch(e){}
+  return d;
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let S=load();
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const yesterday=()=>{const d=new Date(Date.now()-864e5);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+
+const coinMult=()=>1+0.2*S.upg.coin;
+const maxHearts=()=>3+S.upg.heart;
+const hitBonus=()=>2*S.upg.power;
+const xpNeed=l=>80+l*40;
+const allItems=()=>[...CARS.map(i=>({cat:'car',i})),...BLASTERS.map(i=>({cat:'blaster',i})),...SKINS.map(i=>({cat:'skin',i}))];
+const findItem=id=>allItems().find(x=>x.i.id===id);
+const rnd=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const ar=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
+
+/* ================= SPRITES ================= */
+const COIN='<svg class="ico" viewBox="0 0 10 10" shape-rendering="crispEdges"><rect x="2" y="0" width="6" height="10" fill="#1B2418"/><rect x="0" y="2" width="10" height="6" fill="#1B2418"/><rect x="1" y="1" width="8" height="8" fill="#1B2418"/><rect x="2" y="1" width="6" height="8" fill="#FFC93C"/><rect x="1" y="2" width="8" height="6" fill="#FFC93C"/><rect x="2" y="7" width="6" height="1" fill="#C98A12"/><rect x="7" y="2" width="1" height="6" fill="#C98A12"/><rect x="4" y="3" width="2" height="4" fill="#FFF0B3"/></svg>';
+const GEM='<svg class="ico" viewBox="0 0 10 10"><polygon points="2,1 8,1 10,4 5,10 0,4" fill="#1B2418"/><polygon points="2.6,1.8 7.4,1.8 8.9,4 5,8.6 1.1,4" fill="#38E0D0"/><polygon points="2.6,1.8 5,1.8 4,4 1.1,4" fill="#E0FFFC"/><polygon points="5,8.6 6.5,4 8.9,4" fill="#167A70"/></svg>';
+function carSVG(c){
+  const big=c.big, ww=big?9:6, wh=big?17:13, lx=big?0:2, rx=44-lx-ww;
+  let s=`<svg viewBox="0 0 44 70" shape-rendering="crispEdges">`+
+  `<rect x="${lx}" y="8" width="${ww}" height="${wh}" fill="#1B2418"/><rect x="${rx}" y="8" width="${ww}" height="${wh}" fill="#1B2418"/>`+
+  `<rect x="${lx}" y="${big?45:47}" width="${ww}" height="${wh}" fill="#1B2418"/><rect x="${rx}" y="${big?45:47}" width="${ww}" height="${wh}" fill="#1B2418"/>`+
+  `<rect x="4" y="1" width="36" height="68" fill="#1B2418"/><rect x="6" y="3" width="32" height="64" fill="${c.body}"/>`+
+  `<rect x="20" y="3" width="4" height="13" fill="${c.stripe}"/><rect x="20" y="54" width="4" height="13" fill="${c.stripe}"/>`+
+  `<rect x="9" y="16" width="26" height="10" fill="#1B2418"/><rect x="10" y="17" width="24" height="8" fill="#9FE3FF"/><rect x="11" y="18" width="7" height="2" fill="#E8FAFF"/>`+
+  `<rect x="9" y="26" width="26" height="19" fill="${c.roof}"/>`+
+  `<rect x="9" y="45" width="26" height="8" fill="#1B2418"/><rect x="10" y="46" width="24" height="6" fill="#9FE3FF"/>`+
+  `<rect x="8" y="3" width="7" height="3" fill="#FFF59D"/><rect x="29" y="3" width="7" height="3" fill="#FFF59D"/>`+
+  `<rect x="8" y="64" width="7" height="3" fill="#E5484D"/><rect x="29" y="64" width="7" height="3" fill="#E5484D"/>`;
+  if(c.police)s+=`<rect x="10" y="32" width="12" height="6" fill="#E5484D"/><rect x="22" y="32" width="12" height="6" fill="#2E86DE"/>`;
+  return s+'</svg>';
+}
+function blasterSVG(b){
+  const k='stroke="#1B2418" stroke-width="1.6"';
+  return `<svg viewBox="0 0 66 34">`+
+  `<rect x="2" y="10" width="7" height="10" fill="${b.dark}" ${k}/>`+
+  `<rect x="13" y="20" width="10" height="12" fill="${b.dark}" ${k}/>`+
+  `<rect x="23" y="20" width="8" height="5" fill="none" ${k}/>`+
+  `<rect x="7" y="8" width="40" height="13" fill="${b.body}" ${k}/>`+
+  `<rect x="9" y="10" width="34" height="2.5" fill="rgba(255,255,255,.45)"/>`+
+  `<rect x="27" y="2" width="15" height="7" fill="${b.acc}" ${k}/>`+
+  `<rect x="47" y="11" width="13" height="7" fill="${b.acc}" ${k}/>`+
+  `<rect x="59" y="9" width="5" height="11" fill="${b.dark}" ${k}/>`+
+  `<rect x="14" y="14" width="3" height="3" fill="${b.acc}"/><rect x="19" y="14" width="3" height="3" fill="${b.acc}"/>`+
+  `</svg>`;
+}
+function skinSVG(s){
+  const P=[];const r=(x,y,w,h,c)=>P.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`);
+  r(0,0,8,8,s.skin);r(0,0,8,2,s.hair);r(0,2,1,2,s.hair);r(7,2,1,2,s.hair);
+  r(1,4,1,1,'#fff');r(2,4,1,1,'#1B2418');r(5,4,1,1,'#1B2418');r(6,4,1,1,'#fff');r(3,6,2,1,'#8C4A3A');
+  if(s.type==='ninja'){r(0,0,8,4,s.hair);r(0,5,8,3,s.hair);r(1,3,6,1,'#E5484D')}
+  if(s.type==='astro'){r(0,0,8,1,'#fff');r(0,0,1,8,'#fff');r(7,0,1,8,'#fff');r(0,7,8,1,'#fff');r(1,1,6,6,'rgba(120,200,255,.35)');r(1,1,2,1,'rgba(255,255,255,.8)')}
+  if(s.type==='knight'){r(0,0,8,8,s.hair);r(1,4,6,1,'#1B2418');r(2,4,1,1,'#fff');r(5,4,1,1,'#fff');r(3,0,2,8,'rgba(0,0,0,.15)');r(3,0,2,1,'#E5484D')}
+  r(0,8,8,3,s.shirt);r(0,8,8,1,'rgba(0,0,0,.2)');r(3,9,2,2,'rgba(255,255,255,.25)');
+  return `<svg viewBox="0 0 8 11" shape-rendering="crispEdges">${P.join('')}</svg>`;
+}
+const itemSVG=(cat,i)=>cat==='car'?carSVG(i):cat==='blaster'?blasterSVG(i):skinSVG(i);
+const eq=cat=>{const id=S.equip[cat];return (cat==='car'?CARS:cat==='blaster'?BLASTERS:SKINS).find(x=>x.id===id)};
+
+/* ================= AUDIO ================= */
+let AC=null;
+function ac(){if(!S.settings.sound)return null;if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return null}}if(AC.state==='suspended')AC.resume();return AC}
+function tone(f,d,type='square',vol=.07,slide=0,delay=0){const a=ac();if(!a)return;const t=a.currentTime+delay;const o=a.createOscillator(),g=a.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.linearRampToValueAtTime(Math.max(40,f+slide),t+d);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.02)}
+function noise(d=.2,vol=.12,delay=0){const a=ac();if(!a)return;const t=a.currentTime+delay;const b=a.createBuffer(1,a.sampleRate*d,a.sampleRate);const ch=b.getChannelData(0);for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*(1-i/ch.length);const s=a.createBufferSource();s.buffer=b;const g=a.createGain();g.gain.value=vol;s.connect(g);g.connect(a.destination);s.start(t)}
+const sfx={
+  tap(){tone(660,.05,'square',.04)},
+  coin(){tone(988,.07,'square',.06);tone(1319,.14,'square',.06,0,.07)},
+  good(){[523,659,784,1047].forEach((f,i)=>tone(f,.1,'triangle',.11,0,i*.06))},
+  bad(){tone(200,.28,'sawtooth',.07,-90)},
+  laser(){tone(1500,.16,'sawtooth',.045,-1200)},
+  boom(){noise(.22,.14)},
+  place(){tone(180,.08,'square',.08);noise(.06,.06)},
+  win(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,.14,'square',.06,0,i*.1))},
+  chest(){[392,523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,.09,'triangle',.09,0,i*.05))},
+  levelup(){[659,784,988,1319,1568].forEach((f,i)=>tone(f,.18,'square',.06,0,i*.12))}
+};
+let arVoice=null;
+function loadVoices(){try{const vs=speechSynthesis.getVoices();arVoice=vs.find(v=>/^ar/i.test(v.lang))||null}catch(e){}}
+if('speechSynthesis' in window){loadVoices();try{speechSynthesis.onvoiceschanged=loadVoices}catch(e){}}
+function say(t){if(!S.settings.voice||!('speechSynthesis' in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ar-SA';if(arVoice)u.voice=arVoice;u.rate=.85;u.pitch=1.15;speechSynthesis.speak(u)}catch(e){}}
+let qAudio=null,audioWarned=false;
+function pad3(n){return String(n).padStart(3,'0')}
+function playAyah(sid,n,onend){
+  try{if(qAudio){qAudio.pause()}qAudio=new Audio(`https://everyayah.com/data/Alafasy_128kbps/${pad3(sid)}${pad3(n)}.mp3`);
+    qAudio.onended=()=>onend&&onend();
+    qAudio.onerror=()=>{if(!audioWarned){audioWarned=true;toast('التلاوة الصوتية تحتاج إنترنت. اقرأها مع أحد الكبار 🤍')}onend&&onend()};
+    const p=qAudio.play();if(p&&p.catch)p.catch(()=>{qAudio.onerror()});
+  }catch(e){onend&&onend()}
+}
+function stopAyah(){try{if(qAudio){qAudio.pause();qAudio.onended=null;qAudio.onerror=null}}catch(e){}}
+
+/* ================= FX ================= */
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
+const CF=['#FFC93C','#4FAE32','#E5484D','#2E86DE','#38E0D0','#8B6CF0'];
+function confetti(n=40){for(let i=0;i<n;i++){const c=document.createElement('div');c.className='cf';c.style.left=Math.random()*100+'vw';c.style.background=CF[rnd(CF.length)];c.style.setProperty('--dx',(Math.random()*160-80)+'px');c.style.animationDuration=(1.3+Math.random()*1.2)+'s';c.style.animationDelay=(Math.random()*.4)+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),3200)}}
+function floatTxt(parent,x,y,t){const d=document.createElement('div');d.className='ftxt';d.textContent=t;d.style.left=x+'px';d.style.top=y+'px';parent.appendChild(d);setTimeout(()=>d.remove(),950)}
+function explode(parent,x,y,color){for(let i=0;i<12;i++){const p=document.createElement('div');p.className='px';p.style.left=(x-6)+'px';p.style.top=(y-6)+'px';p.style.background=i%3?color:'#FFC93C';const a=Math.random()*Math.PI*2,d=40+Math.random()*60;p.style.setProperty('--dx',Math.cos(a)*d+'px');p.style.setProperty('--dy',Math.sin(a)*d+'px');parent.appendChild(p);setTimeout(()=>p.remove(),650)}}
+
+/* ================= SHELL ================= */
+const app=document.getElementById('app'),top_=document.getElementById('top'),scr=document.getElementById('screen');
+let cur={name:'home'};let G=null; // active game
+function stopGame(){if(G&&G.stop)G.stop();G=null;stopAyah()}
+function updTop(){
+  const need=xpNeed(S.lvl);
+  top_.innerHTML=`<div class="me"><div class="av">${skinSVG(eq('skin'))}</div><div class="info"><div class="nm">${esc(S.name)}</div><div class="lvl"><b>مستوى ${ar(S.lvl)}</b><div class="xpbar"><i style="width:${Math.min(100,S.xp/need*100)}%"></i></div></div></div></div>`+
+  `<div class="cur" id="cCoins">${COIN}<span>${ar(S.coins)}</span></div><div class="cur">${GEM}<span>${ar(S.gems)}</span></div>`+
+  `<button class="gear" id="gear" aria-label="إعدادات الوالدين: اضغط مطولاً">⚙️</button>`;
+  bindGear();
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function go(name,p={}){stopGame();cur=Object.assign({name},p);app.classList.toggle('ingame',!!p.ingame);scr.classList.toggle('full',!!p.full);updTop();scr.scrollTop=0;
+  ({home:renderHome,letters:renderLetters,quran:renderQuran,shop:renderShop}[name]||renderHome)();
+  if(!p.ingame)checkBreak();
+}
+function header(t,back='home'){return `<div class="hdr"><button class="btn sm stone" data-act="go" data-to="${back}" aria-label="رجوع">→</button><h2>${t}</h2></div>`}
+function starStr(n,max=3){let s='<span class="stars">';for(let i=0;i<max;i++)s+=i<n?'★':'<span class="e">★</span>';return s+'</span>'}
+
+/* ================= HOME ================= */
+function lettersDone(){return LETTERS.reduce((a,_,i)=>a+(S.letters[i]?1:0),0)}
+function surahsDone(){return SURAHS.reduce((a,s)=>a+(S.surahs[s.id]?1:0),0)}
+function renderHome(){
+  const dailyOk=S.daily.last!==today();
+  const st=S.daily.last===today()||S.daily.last===yesterday()?S.daily.streak:0;
+  let streak='';for(let i=1;i<=7;i++)streak+=`<span class="${i<=st?'on':''}">${ar(i)}</span>`;
+  scr.innerHTML=`
+  <button class="stage" data-act="go" data-to="shop" data-tab="car" aria-label="كراج البطل">
+    <span class="tag">كراج ${esc(S.name)}</span>
+    <div class="car">${carSVG(eq('car'))}</div>
+    <div class="hero bob">${skinSVG(eq('skin'))}</div>
+    <div class="gun bob" style="animation-delay:-1.2s">${blasterSVG(eq('blaster'))}</div>
+  </button>
+  ${dailyOk?`<button class="btn daily" data-act="daily"><span class="chest">🎁</span><span>صندوق اليوم المجاني!<small>افتحه كل يوم وخلّي السلسلة تكبر</small></span></button>`:''}
+  <div class="worlds">
+    <button class="btn wcard" data-act="go" data-to="letters"><span class="glyph">أ ب ت</span><span class="t">عالم الحروف</span><span class="p">${ar(lettersDone())} / ${ar(28)}</span></button>
+    <button class="btn wcard" style="--c:var(--grass-d)" data-act="go" data-to="quran"><span class="glyph q">قُرْآن</span><span class="t">عالم القرآن</span><span class="p">${ar(surahsDone())} / ${ar(SURAHS.length)}</span></button>
+  </div>
+  <div class="row2">
+    <button class="btn gold" data-act="go" data-to="shop" data-tab="car">🏪 المتجر</button>
+    <button class="btn violet" data-act="go" data-to="shop" data-tab="box">❓ صندوق الحظ</button>
+  </div>
+  <div class="streak" aria-label="أيام متتالية">${streak}</div>`;
+}
+function claimDaily(){
+  if(S.daily.last===today())return;
+  S.daily.streak=S.daily.last===yesterday()?S.daily.streak+1:1;S.daily.last=today();
+  const day=((S.daily.streak-1)%7)+1;const coins=40+20*day;const gems=day===7?6:(day%3===0?2:0);
+  S.coins+=coins;S.gems+=gems;save();sfx.chest();confetti(50);
+  overlay(`<h2>اليوم ${ar(day)} 🔥</h2><div class="mbox burst">🎁</div><div class="earn">${COIN}+${ar(coins)}</div>${gems?`<div class="earn">${GEM}+${ar(gems)}</div>`:''}<div class="muted">ارجع بكرة عشان صندوق أكبر! اليوم السابع فيه جواهر كثيرة</div><button class="btn big" data-act="closeov">يا سلام!</button>`,()=>go('home'));
+}
+
+/* ================= LETTERS MAP ================= */
+const ls=i=>S.letters[i]||0;
+const letterOpen=i=>i===0||(i%4!==0?ls(i-1)>0:(S.boss[i/4-1]||0)>0);
+const bossOpen=w=>[0,1,2,3].every(k=>ls(w*4+k)>0);
+function renderLetters(){
+  let h=header('عالم الحروف');let nextMarked=false;
+  WORLDS.forEach((w,wi)=>{
+    const done=[0,1,2,3].filter(k=>ls(wi*4+k)>0).length+((S.boss[wi]||0)>0?1:0);
+    h+=`<section class="world" style="--wc:${w.c}"><h3><span>${w.name}</span><small>${ar(done)}/${ar(5)}</small></h3><div class="nodes">`;
+    for(let k=0;k<4;k++){const i=wi*4+k,open=letterOpen(i),s=ls(i);let cls='node';if(!open)cls+=' locked';else if(!s&&!nextMarked){cls+=' next';nextMarked=true}
+      h+=`<button class="${cls}" data-act="letter" data-i="${i}" aria-label="حرف ${LETTERS[i][1]}">${LETTERS[i][0]}${s?`<span class="st">${starStr(s)}</span>`:''}</button>`}
+    const bo=bossOpen(wi),bs=S.boss[wi]||0;let cls='node boss';if(!bo)cls+=' locked';else if(!bs&&!nextMarked){cls+=' next';nextMarked=true}
+    h+=`<button class="${cls}" data-act="boss" data-w="${wi}" aria-label="تحدي الزعيم">🏰${bs?`<span class="st">${starStr(bs)}</span>`:''}</button></div></section>`;
+  });
+  scr.innerHTML=h;
+}
+
+/* ================= QURAN MAP ================= */
+const surahOpen=k=>k===0||(S.surahs[SURAHS[k-1].id]||0)>0;
+function renderQuran(){
+  let h=header('عالم القرآن');let nextMarked=false;
+  SURAHS.forEach((s,k)=>{const open=surahOpen(k),st=S.surahs[s.id]||0;let extra='';if(!open)extra=' locked';
+    const pulse=open&&!st&&!nextMarked;if(pulse)nextMarked=true;
+    h+=`<button class="btn surah${extra}" ${pulse?'style="--c:var(--grass)"':''} data-act="surah" data-k="${k}"><span class="num">${open?ar(k+1):'🔒'}</span><span class="meta"><span class="sn">سورة ${s.name}</span><small>${ar(s.ayat.length)} آيات ${st?starStr(st):''}</small></span></button>`});
+  h+=`<p class="hint">ابنِ كل آية بمكعبات الكلمات واجمع العملات 🧱</p>`;
+  scr.innerHTML=h;
+}
+
+/* ================= SHOP ================= */
+function renderShop(){
+  const tab=cur.tab||'car';
+  const tabs=[['car','🚗 سيارات'],['blaster','🔫 أسلحة'],['skin','🧑 شخصيات'],['upg','⚡ تطوير'],['box','❓ صندوق الحظ']];
+  let h=header('المتجر')+`<div class="tabs" role="tablist">${tabs.map(([k,t])=>`<button class="tab${k===tab?' on':''}" data-act="tab" data-tab="${k}">${t}</button>`).join('')}</div>`;
+  if(tab==='upg'){
+    h+=UPGRADES.map(u=>{const l=S.upg[u.id],mx=l>=u.max,price=Math.round(u.base*Math.pow(1.8,l));
+      return `<div class="panel upg"><div class="ic">${u.icon}</div><div class="mid"><b>${u.name}</b><span class="muted">${u.desc(Math.min(l+ (mx?0:1),u.max))}</span><div class="pips">${Array.from({length:u.max},(_,i)=>`<i class="${i<l?'on':''}"></i>`).join('')}</div></div>
+      ${mx?'<button class="btn sm stone" disabled>كامل</button>':`<button class="btn sm gold" data-act="upg" data-id="${u.id}">${COIN}${ar(price)}</button>`}</div>`}).join('');
+  }else if(tab==='box'){
+    h+=`<div class="panel boxzone"><div class="mbox" id="mbox">🎁</div><b style="font-family:var(--f-display);font-size:26px">صندوق الحظ</b>
+      <div class="odds">ممكن يطلع لك: عملات، جواهر، سيارة أو سلاح أو شخصية جديدة… أو الجائزة الكبرى!</div>
+      <button class="btn big violet" data-act="buybox" style="display:flex;gap:6px;align-items:center">افتح ${COIN}${ar(BOX_PRICE)}</button>
+      <div class="muted">فتحت ${ar(S.boxes)} صندوق</div></div>`;
+  }else{
+    const list=tab==='car'?CARS:tab==='blaster'?BLASTERS:SKINS;
+    h+=`<div class="grid">`+list.map(i=>{const own=S.owned.includes(i.id),on=S.equip[tab]===i.id;
+      let b;if(on)b=`<button class="btn stone" disabled>✔ مستخدم</button>`;else if(own)b=`<button class="btn blue" data-act="equip" data-id="${i.id}" data-cat="${tab}">استخدم</button>`;
+      else if(i.gems)b=`<button class="btn violet" data-act="buy" data-id="${i.id}">${GEM}${ar(i.gems)}</button>`;else b=`<button class="btn gold" data-act="buy" data-id="${i.id}">${COIN}${ar(i.price)}</button>`;
+      return `<div class="card">${i.rar?`<span class="rar ${i.rar}">${RAR[i.rar]}</span>`:''}<div class="pic ${tab}">${itemSVG(tab,i)}</div><div class="nm">${i.name}</div>${b}</div>`}).join('')+`</div>`;
+  }
+  scr.innerHTML=h;
+}
+function buy(id){
+  const f=findItem(id);if(!f||S.owned.includes(id))return;const i=f.i;
+  if(i.gems){if(S.gems<i.gems)return notEnough('gem');S.gems-=i.gems}else{if(S.coins<i.price)return notEnough('coin');S.coins-=i.price}
+  S.owned.push(id);S.equip[f.cat]=id;save();sfx.chest();confetti(60);
+  overlay(`<h2>صار لك!</h2><div class="reveal burst"><div class="rpic">${itemSVG(f.cat,i)}</div>${i.name}</div><button class="btn big" data-act="closeov">روعة!</button>`,()=>go('shop',{tab:f.cat}));
+}
+function notEnough(k){sfx.bad();toast(k==='gem'?'تحتاج جواهر أكثر. اجمعها من الصناديق والمستويات 💎':'تحتاج عملات أكثر. العب مرحلة واجمع! 🪙');}
+function buyUpg(id){const u=UPGRADES.find(x=>x.id===id);const l=S.upg[id];if(l>=u.max)return;const price=Math.round(u.base*Math.pow(1.8,l));if(S.coins<price)return notEnough('coin');S.coins-=price;S.upg[id]++;save();sfx.levelup();confetti(30);toast(`تم التطوير! ${u.name} مستوى ${ar(S.upg[id])}`);go('shop',{tab:'upg'})}
+
+/* ================= BOXES ================= */
+function pickUnowned(maxPrice,allowGems){const c=allItems().filter(x=>!S.owned.includes(x.i.id)&&((x.i.price&&x.i.price<=maxPrice)||(allowGems&&x.i.gems)));return c.length?c[rnd(c.length)]:null}
+function rollBox(kind){
+  const r=Math.random();
+  if(kind==='mystery'){
+    if(r<.05)return{t:'jackpot',coins:500,gems:10,rar:'legend'};
+    if(r<.20){const it=pickUnowned(2500,r<.08);if(it)return{t:'item',it,rar:it.i.rar||'rare'};return{t:'gems',gems:12,rar:'epic'}}
+    if(r<.45)return{t:'gems',gems:2+rnd(7),rar:'rare'};
+    return{t:'coins',coins:60+rnd(19)*10};
+  }
+  if(r<.10){const it=pickUnowned(1500,false);if(it)return{t:'item',it,rar:it.i.rar||'rare'}}
+  if(r<.40)return{t:'gems',gems:1+rnd(4),rar:'rare'};
+  return{t:'coins',coins:30+rnd(13)*10};
+}
+function applyRoll(o){if(o.coins)S.coins+=o.coins;if(o.gems)S.gems+=o.gems;if(o.t==='item'){S.owned.push(o.it.i.id);S.equip[o.it.cat]=o.it.i.id}save()}
+function rollHTML(o){
+  const badge=o.rar?`<span class="rbadge ${o.rar}">${RAR[o.rar]}!</span>`:'';
+  if(o.t==='jackpot')return `<div class="reveal burst">${badge}الجائزة الكبرى!!<div class="earn">${COIN}+${ar(o.coins)}</div><div class="earn">${GEM}+${ar(o.gems)}</div></div>`;
+  if(o.t==='item')return `<div class="reveal burst">${badge}<div class="rpic">${itemSVG(o.it.cat,o.it.i)}</div>${o.it.i.name}</div>`;
+  if(o.t==='gems')return `<div class="reveal burst">${badge}<div class="earn">${GEM}+${ar(o.gems)}</div></div>`;
+  return `<div class="reveal burst"><div class="earn">${COIN}+${ar(o.coins)}</div></div>`;
+}
+function openBoxAnim(kind,after){
+  const o=rollBox(kind);applyRoll(o);if(kind==='mystery'){S.boxes++;save()}
+  const ov=overlay(`<h2>صندوق!</h2><div class="mbox shakebox" id="bx">🎁</div><div id="bxr"></div><div class="btns" id="bxb"></div>`,after);
+  sfx.tap();setTimeout(()=>sfx.tap(),300);setTimeout(()=>sfx.tap(),600);
+  setTimeout(()=>{const bx=ov.querySelector('#bx');if(!bx)return;bx.textContent=o.t==='jackpot'?'💰':o.rar==='legend'?'🌟':o.rar==='epic'?'💜':o.rar==='rare'?'💎':'✨';bx.className='mbox burst';
+    ov.querySelector('#bxr').innerHTML=rollHTML(o);sfx.chest();confetti(o.rar?80:35);if(o.rar==='legend'||o.t==='jackpot')sfx.levelup();
+    ov.querySelector('#bxb').innerHTML=(kind==='mystery'?`<button class="btn violet" data-act="buyboxagain" style="display:flex;gap:6px;align-items:center">مرة ثانية ${COIN}${ar(BOX_PRICE)}</button>`:'')+`<button class="btn" data-act="closeov">تمام</button>`;updTop()},950);
+}
+
+/* ================= OVERLAY ================= */
+let ovEl=null,ovAfter=null;
+function overlay(html,after){closeOv(true);ovAfter=after||null;ovEl=document.createElement('div');ovEl.className='ov';ovEl.innerHTML=`<div class="ovc" role="dialog" aria-modal="true">${html}</div>`;document.body.appendChild(ovEl);ovEl.addEventListener('click',onClick);return ovEl}
+function closeOv(silent){if(ovEl){ovEl.remove();ovEl=null;const a=ovAfter;ovAfter=null;if(!silent&&a)a()}}
+
+/* ================= LEVEL FLOW: LETTERS ================= */
+function letterPool(i,extra=4){const hi=Math.min(27,Math.max(i+extra,5));const p=[];for(let k=0;k<=hi;k++)if(k!==i)p.push(k);return p}
+function startLetter(i){
+  if(!letterOpen(i)){sfx.bad();toast('كمّل الحرف اللي قبله أولاً 🔒');return}
+  const run={mist:0,coins:0};
+  showLearn(i,()=>{
+    runShoot({target:()=>i,pool:letterPool(i),goal:5,title:'اصطد',run,onWin:()=>{
+      runRace({target:()=>i,pool:letterPool(i),goal:5,run,onWin:()=>{
+        const st=run.mist<=1?3:run.mist<=3?2:1;const first=!S.letters[i];S.letters[i]=Math.max(ls(i),st);
+        finishLevel({stars:st,game:run.coins,base:first?60:30,xp:first?40:20,chest:first?.4:.25,
+          next:()=>{const n=i+1;if(n<28&&letterOpen(n))startLetter(n);else if(i%4===3&&bossOpen(Math.floor(i/4)))startBoss(Math.floor(i/4));else go('letters')}});
+      }});
+    }});
+  });
+}
+function startBoss(w){
+  if(!bossOpen(w)){sfx.bad();toast('كمّل حروف هذا العالم أولاً 🔒');return}
+  const L=[0,1,2,3].map(k=>w*4+k);let q=shuffle(L),qi=0,cnt=0;
+  const tgt=()=>q[qi%q.length];
+  const run={mist:0,coins:0};
+  const pool=Array.from({length:Math.min(28,w*4+4)},(_,k)=>k);
+  overlay(`<h2>تحدي الزعيم 🏰</h2><div class="bigstars" style="font-family:var(--f-letter);color:var(--ink)">${L.map(i=>LETTERS[i][0]).join(' ')}</div><div class="muted">الحرف المطلوب يتغير! انتبه وركّز 👀</div><button class="btn big red" data-act="closeov">ابدأ!</button>`,()=>{
+    runShoot({target:tgt,pool,goal:8,title:'اصطد',run,boss:true,onHit:()=>{cnt++;if(cnt%2===0){qi++;return true}return false},onWin:()=>{
+      qi=0;q=shuffle(L);
+      runRace({target:()=>q[rnd(q.length)],pool,goal:6,run,boss:true,onWin:()=>{
+        const st=run.mist<=2?3:run.mist<=5?2:1;const first=!S.boss[w];S.boss[w]=Math.max(S.boss[w]||0,st);
+        finishLevel({stars:st,game:run.coins,base:first?150:60,xp:first?90:40,chest:1,big:true,
+          next:()=>{const n=(w+1)*4;if(n<28)startLetter(n);else go('letters')}});
+      }});
+    }});
+  });
+}
+function showLearn(i,next){
+  const [l,name,word,emo]=LETTERS[i];const w=WORLDS[Math.floor(i/4)];
+  const nonJ='اأإآدذرزوؤء';const joins=!nonJ.includes(word[0]);
+  const forms=nonJ.includes(l)?[l,'ـ'+l]:[l,l+'ـ','ـ'+l+'ـ','ـ'+l];
+  const wordHTML=`<span class="hl">${word[0]}${joins?'‍':''}</span>${joins?'‍':''}${word.slice(1)}`;
+  go('learn',{ingame:true,full:false});
+  scr.innerHTML=`${`<div class="hdr"><button class="btn sm red" data-act="go" data-to="letters" aria-label="خروج">✕</button><h2>حرف ${name}</h2></div>`}
+  <div class="learn" style="--wc:${w.c}">
+    <button class="bigl" id="bigl" data-act="saylet" aria-label="اسمع الحرف">${l}</button>
+    <div class="hint">👆 اضغط على الحرف واسمعه</div>
+    <div class="forms">${forms.map(f=>`<span>${f}</span>`).join('')}</div>
+    <button class="wordcard" data-act="sayword"><span class="emo">${emo}</span><span class="w">${wordHTML}</span></button>
+    <button class="btn big gold" data-act="learnnext">يلا نلعب! 🎯</button>
+  </div>`;
+  cur.learn={i,next};
+  setTimeout(()=>say(`حرف ال${name}. ${word}`),250);
+}
+
+/* ================= SHOOT GAME ================= */
+function gameShell(kind,label){
+  return `<div class="game"><div class="ghud"><button class="btn sm red" data-act="quit" aria-label="خروج">✕</button><div class="hearts" id="hearts"></div>
+  <button class="prompt" data-act="sayprompt"><span class="plab">${label}</span><span class="pl" id="pl"></span><span class="spk">🔊</span></button>
+  <div class="cur gcoins">${COIN}<span id="gc">٠</span></div></div><div class="prog"><i id="pg" style="width:0"></i></div>
+  <div class="area ${kind}" id="area"><div class="combo" id="combo" hidden></div></div>${kind==='race'?'<div class="lanebtns"><button class="btn blue" data-act="lane" data-d="-1" aria-label="يسار">◀</button><button class="btn blue" data-act="lane" data-d="1" aria-label="يمين">▶</button></div>':''}</div>`;
+}
+function heartsHTML(h,m){return '❤️'.repeat(Math.max(0,h))+'🤍'.repeat(Math.max(0,m-h))}
+function runShoot(cfg){
+  stopGame();app.classList.add('ingame');scr.classList.add('full');cur={name:'game'};
+  scr.innerHTML=gameShell('shoot',cfg.title||'اصطد');
+  const area=document.getElementById('area'),run=cfg.run;
+  const gun=document.createElement('div');gun.className='gunwrap';const bl=eq('blaster');gun.innerHTML=blasterSVG(bl);area.appendChild(gun);gun.style.transform='rotate(-90deg)';
+  let W=area.clientWidth,H=area.clientHeight;const mh=maxHearts();
+  const st={hearts:mh,hits:0,combo:0,items:[],last:0,spawnT:0,alive:true,raf:0,target:cfg.target()};
+  const size=Math.min(76,Math.max(58,W/5));
+  const upd=()=>{document.getElementById('hearts').innerHTML=heartsHTML(st.hearts,mh);document.getElementById('pl').textContent=LETTERS[st.target][0];document.getElementById('gc').textContent=ar(run.coins);document.getElementById('pg').style.width=(st.hits/cfg.goal*100)+'%'};
+  upd();
+  const sayT=()=>say(`اصطد حرف ال${LETTERS[st.target][1]}`);setTimeout(sayT,200);
+  G={stop(){st.alive=false;cancelAnimationFrame(st.raf);window.removeEventListener('resize',rs)},say:sayT};const me=G;
+  const rs=()=>{W=area.clientWidth;H=area.clientHeight};window.addEventListener('resize',rs);
+  function spawn(){
+    const hasT=st.items.some(o=>o.l===st.target);
+    let l;if(!hasT||Math.random()<.4)l=st.target;else{const p=cfg.pool.filter(x=>x!==st.target);l=p[rnd(p.length)]}
+    const el=document.createElement('button');el.className='tgt';el.textContent=LETTERS[l][0];el.style.width=el.style.height=size+'px';el.style.fontSize=(size*.58)+'px';
+    el.style.setProperty('--tc',WORLDS[Math.floor(l/4)].c);el.setAttribute('aria-label',LETTERS[l][1]);
+    let x;for(let t=0;t<8;t++){x=12+Math.random()*(W-size-24);if(!st.items.some(o=>Math.abs(o.x-x)<size&&o.y<size*1.6))break}
+    const o={el,l,x,y:-size-10,ph:Math.random()*6,vy:(H/(8.5-Math.min(3,st.hits*.3)))};
+    el.style.transform=`translate(${x}px,${o.y}px)`;area.appendChild(el);st.items.push(o);
+  }
+  function loop(t){
+    if(!st.alive)return;const dt=st.last?Math.min(.05,(t-st.last)/1000):0;st.last=t;
+    st.spawnT-=dt;if(st.spawnT<=0&&st.items.length<4){spawn();st.spawnT=1.15}
+    for(let k=st.items.length-1;k>=0;k--){const o=st.items[k];o.y+=o.vy*dt;o.ph+=dt*2;const xx=o.x+Math.sin(o.ph)*10;o.cx=xx;o.el.style.transform=`translate(${xx}px,${o.y}px)`;
+      if(o.y>H-size-70){o.el.remove();st.items.splice(k,1)}}
+    st.raf=requestAnimationFrame(loop);
+  }
+  st.raf=requestAnimationFrame(loop);
+  area.addEventListener('pointerdown',e=>{
+    const el=e.target.closest('.tgt');if(!el||!st.alive)return;e.preventDefault();
+    const o=st.items.find(q=>q.el===el);if(!o)return;
+    const r=area.getBoundingClientRect();const tx=o.cx+size/2,ty=o.y+size/2;const gx=W/2,gy=H-14-24;
+    const ang=Math.atan2(ty-gy,tx-gx);gun.style.transform=`rotate(${ang*180/Math.PI}deg)`;
+    const beam=document.createElement('div');beam.className='beam';beam.style.left=gx+'px';beam.style.top=gy+'px';beam.style.width=Math.hypot(tx-gx,ty-gy)+'px';beam.style.transform=`rotate(${ang}rad)`;beam.style.background=bl.beam;beam.style.color=bl.beam;area.appendChild(beam);setTimeout(()=>beam.remove(),260);
+    sfx.laser();
+    if(o.l===st.target){
+      st.hits++;st.combo++;const mult=st.combo>=6?3:st.combo>=3?2:1;const gain=(5+hitBonus())*mult;run.coins+=gain;
+      explode(area,tx,ty,WORLDS[Math.floor(o.l/4)].c);sfx.boom();setTimeout(()=>sfx.coin(),90);floatTxt(area,tx-20,ty-20,'+'+ar(gain));
+      o.el.remove();st.items.splice(st.items.indexOf(o),1);
+      const cb=document.getElementById('combo');if(mult>1){cb.hidden=false;cb.textContent=`كومبو ×${ar(mult)} 🔥`;cb.classList.remove('bump');void cb.offsetWidth;cb.classList.add('bump')}
+      if(cfg.onHit&&cfg.onHit()){st.target=cfg.target();setTimeout(sayT,350);st.items.forEach(q=>{})}
+      upd();
+      if(st.hits>=cfg.goal){st.alive=false;cancelAnimationFrame(st.raf);sfx.good();confetti(30);setTimeout(()=>{if(G!==me)return;G.stop();G=null;cfg.onWin()},900)}
+    }else{
+      st.hearts--;st.combo=0;run.mist++;document.getElementById('combo').hidden=true;sfx.bad();
+      el.classList.remove('bad');void el.offsetWidth;el.classList.add('bad');say(`هذا حرف ال${LETTERS[o.l][1]}`);upd();
+      if(st.hearts<=0){st.alive=false;cancelAnimationFrame(st.raf);setTimeout(()=>{if(G===me)lose(()=>runShoot(cfg))},600)}
+    }
+  });
+}
+function lose(retry){
+  stopGame();S.coins+=10;save();updTop();
+  overlay(`<h2 style="color:var(--red)">أوه! خلصت القلوب</h2><div class="mbox">💪</div><div class="muted">قربت! خذ ${ar(10)} عملات تشجيع وجرب مرة ثانية</div><div class="btns"><button class="btn big" data-act="retry">حاول مرة ثانية</button><button class="btn stone" data-act="go" data-to="home">البيت</button></div>`);
+  cur.retry=retry;
+}
+
+/* ================= RACE GAME ================= */
+function runRace(cfg){
+  stopGame();app.classList.add('ingame');scr.classList.add('full');cur={name:'game'};
+  scr.innerHTML=gameShell('race','سُق إلى');
+  const area=document.getElementById('area'),run=cfg.run;area.insertAdjacentHTML('afterbegin','<div class="lanes" id="lanes"></div>');
+  const lanesEl=document.getElementById('lanes');
+  let W=area.clientWidth,H=area.clientHeight;const mh=maxHearts();
+  const road=()=>({x0:W*.07,lw:W*.86/3});
+  const car=document.createElement('div');car.className='rcar';const cw=Math.min(W*.86/3*.55,68),ch=cw*1.6;car.style.width=cw+'px';car.style.height=ch+'px';car.innerHTML=carSVG(eq('car'));area.appendChild(car);
+  const st={lane:1,hearts:mh,ok:0,combo:0,gates:[],coins:[],alive:true,raf:0,last:0,off:0,speed:H/5.4};
+  const placeCar=()=>{const {x0,lw}=road();car.style.left=(x0+st.lane*lw+(lw-cw)/2)+'px'};placeCar();
+  const bs=Math.min(road().lw*.72,84);
+  const nextTarget=()=>{const g=st.gates.find(g=>!g.done);return g?g.t:null};
+  const upd=()=>{document.getElementById('hearts').innerHTML=heartsHTML(st.hearts,mh);const t=nextTarget();if(t!==null)document.getElementById('pl').textContent=LETTERS[t][0];document.getElementById('gc').textContent=ar(run.coins);document.getElementById('pg').style.width=(st.ok/cfg.goal*100)+'%'};
+  const sayT=()=>{const t=nextTarget();if(t!==null)say(`سُق إلى حرف ال${LETTERS[t][1]}`)};
+  const rs=()=>{W=area.clientWidth;H=area.clientHeight;placeCar()};window.addEventListener('resize',rs);
+  G={stop(){st.alive=false;cancelAnimationFrame(st.raf);window.removeEventListener('resize',rs);window.removeEventListener('keydown',kd)},say:sayT};const me=G;
+  const kd=e=>{if(e.key==='ArrowLeft')move(-1);if(e.key==='ArrowRight')move(1)};window.addEventListener('keydown',kd);
+  function move(d){st.lane=Math.max(0,Math.min(2,st.lane+d));placeCar();sfx.tap()}
+  G.move=move;
+  function spawnGate(){
+    const t=cfg.target();const cl=rnd(3);const p=shuffle(cfg.pool.filter(x=>x!==t));const ls_=[p[0],p[1],p[2]];ls_[cl]=t;
+    const el=document.createElement('div');el.className='gate';const {x0,lw}=road();
+    el.innerHTML=ls_.map((l,k)=>`<div class="gblk" style="left:${x0+k*lw+(lw-bs)/2}px;width:${bs}px;height:${bs}px;font-size:${bs*.58}px;--tc:${WORLDS[Math.floor(l/4)].c}">${LETTERS[l][0]}</div>`).join('');
+    area.appendChild(el);const g={el,t,cl,ls:ls_,y:-bs-10,done:false,coin:false};st.gates.push(g);el.style.transform=`translateY(${g.y}px)`;
+    const first=st.gates.filter(x=>!x.done).length===1;upd();if(first)setTimeout(sayT,100);
+  }
+  function spawnCoin(){const {x0,lw}=road();const lane=rnd(3);const el=document.createElement('div');el.className='rcoin';el.innerHTML=COIN;area.appendChild(el);const c={el,lane,x:x0+lane*lw+(lw-34)/2,y:-40};st.coins.push(c);el.style.transform=`translate(${c.x}px,${c.y}px)`}
+  function loop(t){
+    if(!st.alive)return;const dt=st.last?Math.min(.05,(t-st.last)/1000):0;st.last=t;const v=st.speed*dt;
+    st.off=(st.off+v)%70;lanesEl.style.backgroundPosition=`33.3% ${st.off}px,66.6% ${st.off}px`;
+    const lastG=st.gates[st.gates.length-1];
+    if(!lastG||lastG.y>H*.52)spawnGate();
+    if(lastG&&!lastG.coin&&lastG.y>H*.26){lastG.coin=true;if(Math.random()<.75)spawnCoin()}
+    const carTop=H-16-ch;
+    for(let k=st.gates.length-1;k>=0;k--){const g=st.gates[k];g.y+=v;g.el.style.transform=`translateY(${g.y}px)`;
+      if(!g.done&&g.y+bs>=carTop+ch*.25){g.done=true;resolve(g)}
+      if(g.y>H+10){g.el.remove();st.gates.splice(k,1)}}
+    for(let k=st.coins.length-1;k>=0;k--){const c=st.coins[k];c.y+=v;c.el.style.transform=`translate(${c.x}px,${c.y}px)`;
+      if(!c.got&&c.lane===st.lane&&c.y+34>carTop&&c.y<carTop+ch){c.got=true;c.el.remove();st.coins.splice(k,1);const gain=3+Math.ceil(hitBonus()/2);run.coins+=gain;sfx.coin();floatTxt(area,c.x,c.y,'+'+ar(gain));upd();continue}
+      if(c.y>H){c.el.remove();st.coins.splice(k,1)}}
+    if(st.alive)st.raf=requestAnimationFrame(loop);
+  }
+  function resolve(g){
+    const blk=g.el.children[st.lane];
+    if(st.lane===g.cl){
+      st.ok++;st.combo++;const mult=st.combo>=4?2:1;const gain=(8+hitBonus())*mult;run.coins+=gain;blk.classList.add('ok');sfx.good();setTimeout(()=>sfx.coin(),120);
+      floatTxt(area,parseFloat(car.style.left),H-ch-60,'+'+ar(gain));car.classList.add('boost');setTimeout(()=>car.classList.remove('boost'),600);st.speed*=1.03;
+      if(mult>1){const cb=document.getElementById('combo');cb.hidden=false;cb.textContent=`نيترو ×${ar(mult)} 🔥`;cb.classList.remove('bump');void cb.offsetWidth;cb.classList.add('bump')}
+      upd();
+      if(st.ok>=cfg.goal){st.alive=false;cancelAnimationFrame(st.raf);confetti(30);sfx.win();setTimeout(()=>{if(G!==me)return;G.stop();G=null;cfg.onWin()},900);return}
+    }else{
+      st.hearts--;st.combo=0;run.mist++;blk.classList.add('no');g.el.children[g.cl].classList.add('ok');document.getElementById('combo').hidden=true;
+      car.classList.remove('crash');void car.offsetWidth;car.classList.add('crash');sfx.bad();sfx.boom();say(`هذا حرف ال${LETTERS[g.ls[st.lane]][1]}`);upd();
+      if(st.hearts<=0){st.alive=false;cancelAnimationFrame(st.raf);setTimeout(()=>{if(G===me)lose(()=>runRace(cfg))},600);return}
+    }
+    setTimeout(()=>{if(st.alive)sayT()},700);
+  }
+  area.addEventListener('pointerdown',e=>{if(!st.alive)return;const r=area.getBoundingClientRect();const {x0,lw}=road();const x=e.clientX-r.left;const ln=Math.max(0,Math.min(2,Math.floor((x-x0)/lw)));if(ln!==st.lane){st.lane=ln;placeCar();sfx.tap()}});
+  st.raf=requestAnimationFrame(loop);
+}
+
+/* ================= QURAN LEVEL ================= */
+function startSurah(k){
+  if(!surahOpen(k)){sfx.bad();toast('كمّل السورة اللي قبلها أولاً 🔒');return}
+  const s=SURAHS[k];const run={mist:0,coins:0,k};
+  go('qlisten',{ingame:true});cur.q={k,run};
+  const basm=s.id!==1?`<div class="basm">${BASMALA}</div>`:'';
+  scr.innerHTML=`<div class="hdr"><button class="btn sm red" data-act="go" data-to="quran" aria-label="خروج">✕</button><h2>سورة ${s.name}</h2></div>
+  <p class="hint">👂 اسمع كل آية وردّدها، بعدين نبنيها!</p>${basm}
+  <div class="ayat">${s.ayat.map((a,n)=>`<button class="ayah" data-act="playayah" data-n="${n}"><span class="an">${ar(n+1)}</span><span class="tx">${a}</span><span>🔊</span></button>`).join('')}</div>
+  <div style="display:flex;justify-content:center;margin-top:16px"><button class="btn big gold" data-act="startbuild">ابدأ البناء 🧱</button></div>`;
+}
+function buildAyah(k,n,run){
+  stopAyah();const s=SURAHS[k];const words=s.ayat[n].split(' ');const ghost=(S.surahs[s.id]||0)<3;
+  go('qbuild',{ingame:true});cur.q={k,run};
+  const order=shuffle(words.map((w,idx)=>({w,idx})));
+  scr.innerHTML=`<div class="hdr"><button class="btn sm red" data-act="go" data-to="quran" aria-label="خروج">✕</button><h2>ابنِ الآية ${ar(n+1)}</h2><div class="cur" style="margin-inline-start:auto">${COIN}<span id="gc">${ar(run.coins)}</span></div></div>
+  <div class="prog"><i style="width:${n/s.ayat.length*100}%"></i></div>
+  <div class="build">
+    ${ghost?`<div class="ghost">${s.ayat[n]}</div>`:'<div class="qstep">🏆 وضع الأبطال: ابنِها من حفظك!</div>'}
+    <div class="wall" id="wall" aria-label="الآية"></div>
+    <div class="blocks" id="blocks">${order.map((o,j)=>`<button class="wb" data-act="word" data-j="${j}">${o.w}</button>`).join('')}</div>
+    <div style="display:flex;justify-content:center"><button class="btn sm blue" data-act="playayah" data-n="${n}">🔊 اسمع الآية</button></div>
+  </div>`;
+  let pos=0,wrong=0;
+  cur.word=(btn)=>{
+    if(btn.classList.contains('gone'))return;
+    if(btn.textContent===words[pos]){
+      btn.classList.add('gone');const p=document.createElement('span');p.className='wb placed';p.textContent=words[pos];document.getElementById('wall').appendChild(p);
+      pos++;wrong=0;run.coins+=3;document.getElementById('gc').textContent=ar(run.coins);sfx.place();
+      document.querySelectorAll('.wb.glow').forEach(b=>b.classList.remove('glow'));
+      if(pos>=words.length){sfx.good();confetti(25);playAyah(s.id,n,null);setTimeout(()=>{if(cur.name!=='qbuild')return;if(n+1<s.ayat.length)buildAyah(k,n+1,run);else quiz(k,run,0)},1800)}
+    }else{
+      wrong++;run.mist++;sfx.bad();btn.classList.remove('bad');void btn.offsetWidth;btn.classList.add('bad');
+      if(wrong>=2){document.querySelectorAll('#blocks .wb:not(.gone)').forEach(b=>{if(b.textContent===words[pos])b.classList.add('glow')})}
+    }
+  };
+}
+function quiz(k,run,qn){
+  const s=SURAHS[k];const Q=4;
+  if(qn>=Q){const st=run.mist<=1?3:run.mist<=4?2:1;const first=!S.surahs[s.id];S.surahs[s.id]=Math.max(S.surahs[s.id]||0,st);
+    finishLevel({stars:st,game:run.coins,base:(first?100:50)+s.ayat.length*10,xp:first?70:35,chest:first?1:.35,big:first,
+      next:()=>{if(k+1<SURAHS.length)startSurah(k+1);else go('quran')}});return}
+  const cands=s.ayat.map((a,i)=>i).filter(i=>s.ayat[i].split(' ').length>=2);const n=cands[rnd(cands.length)];
+  const words=s.ayat[n].split(' ');const wi=rnd(words.length);const ans=words[wi];
+  const all=[...new Set(s.ayat.join(' ').split(' '))].filter(w=>w!==ans);const opts=shuffle([ans,...shuffle(all).slice(0,2)]);
+  go('qquiz',{ingame:true});cur.q={k,run};
+  scr.innerHTML=`<div class="hdr"><button class="btn sm red" data-act="go" data-to="quran" aria-label="خروج">✕</button><h2>أكمل الآية</h2><div class="cur" style="margin-inline-start:auto">${COIN}<span id="gc">${ar(run.coins)}</span></div></div>
+  <div class="prog"><i style="width:${qn/Q*100}%"></i></div>
+  <div class="panel" style="margin-top:12px"><div class="qtext" id="qt">${words.map((w,i)=>i===wi?'<span class="blank" id="blank">&nbsp;</span>':w).join(' ')}</div></div>
+  <p class="qstep">أي كلمة ناقصة؟ 🤔</p>
+  <div class="blocks">${opts.map(o=>`<button class="wb" data-act="opt">${o}</button>`).join('')}</div>`;
+  let done=false;
+  cur.opt=(btn)=>{if(done)return;if(btn.textContent===ans){done=true;const b=document.getElementById('blank');b.textContent=ans;b.className='wb placed';run.coins+=8;document.getElementById('gc').textContent=ar(run.coins);sfx.good();setTimeout(()=>sfx.coin(),120);playAyah(s.id,n,null);setTimeout(()=>{if(cur.name==='qquiz')quiz(k,run,qn+1)},1700)}
+    else{run.mist++;sfx.bad();btn.classList.remove('bad');void btn.offsetWidth;btn.classList.add('bad');btn.disabled=true}};
+}
+
+/* ================= REWARD ================= */
+function addXP(n){S.xp+=n;let ups=0;while(S.xp>=xpNeed(S.lvl)){S.xp-=xpNeed(S.lvl);S.lvl++;ups++}return ups}
+function finishLevel(o){
+  stopGame();const total=Math.round((o.game+o.base)*coinMult());S.coins+=total;const ups=addXP(o.xp);
+  if(ups){S.coins+=100*ups;S.gems+=3*ups}save();
+  const chest=Math.random()<o.chest;
+  sfx.win();confetti(o.big?90:50);
+  const ov=overlay(`<h2>${o.stars===3?'رهيييب!':o.stars===2?'أحسنت!':'كفو!'}</h2>
+    <div class="bigstars">${[1,2,3].map(n=>`<span class="${n<=o.stars?'on':''}" style="animation-delay:${n*.25}s">★</span>`).join('')}</div>
+    <div class="earn">${COIN}<span id="cnt">٠</span></div>
+    ${ups?`<div class="reveal burst"><span class="rbadge legend">ترقية!</span>صرت مستوى ${ar(S.lvl)} 🎉<div class="earn" style="font-size:24px">${COIN}+${ar(100*ups)} ${GEM}+${ar(3*ups)}</div></div>`:''}
+    ${chest?`<div class="muted">لقيت صندوق مفاجأة! افتحه 👇</div><button class="chestbtn" data-act="lvlchest" aria-label="افتح الصندوق">🎁</button>`:''}
+    <div class="btns"><button class="btn big gold" data-act="nextlvl">التالي ▶</button><button class="btn stone" data-act="go" data-to="home">البيت</button></div>`);
+  cur.next=o.next;
+  let c=0;const step=Math.max(1,Math.ceil(total/30));const iv=setInterval(()=>{c=Math.min(total,c+step);const el=ov.querySelector('#cnt');if(!el){clearInterval(iv);return}el.textContent=ar(c);if(c%3===0)sfx.tap();if(c>=total){clearInterval(iv);sfx.coin()}},35);
+  if(ups)setTimeout(()=>sfx.levelup(),900);
+  updTop();
+}
+
+/* ================= PARENTS & TIME ================= */
+let holdT=null,held=false;
+function bindGear(){
+  const g=document.getElementById('gear');if(!g)return;
+  const start=e=>{e.preventDefault();held=false;g.classList.add('holding');holdT=setTimeout(()=>{held=true;g.classList.remove('holding');parentGate()},1500)};
+  const end=()=>{g.classList.remove('holding');clearTimeout(holdT)};
+  g.addEventListener('pointerdown',start);g.addEventListener('pointerup',end);g.addEventListener('pointerleave',end);g.addEventListener('pointercancel',end);
+  g.addEventListener('click',()=>{if(!held)toast('للوالدين: اضغط مطولاً على ⚙️');held=false});
+}
+function parentGate(then){
+  const a=3+rnd(7),b=3+rnd(7);
+  overlay(`<h2 style="font-size:28px">للوالدين فقط</h2><div class="muted">كم حاصل ${a} × ${b} ؟</div><input class="field" id="pg_in" type="number" inputmode="numeric" autocomplete="off"><div class="btns"><button class="btn" data-act="pgok">دخول</button><button class="btn stone" data-act="closeov">إلغاء</button></div>`);
+  cur.pg={ans:a*b,then};setTimeout(()=>{const i=document.getElementById('pg_in');if(i)i.focus()},100);
+}
+function settings(){
+  const lim=S.settings.limit;
+  overlay(`<h2 style="font-size:28px">إعدادات الوالدين</h2>
+  <div class="set"><label for="nm_in">اسم البطل</label><input class="field" id="nm_in" maxlength="16" value="${esc(S.name)}"></div>
+  <div class="set"><label>وقت اللعب اليومي</label><div class="chips">${[10,20,30,45,0].map(m=>`<button class="chip${m===lim?' on':''}" data-act="setlim" data-m="${m}">${m?ar(m)+' د':'بدون حد'}</button>`).join('')}</div>
+  <div class="muted">اليوم: ${ar(Math.floor(S.play.sec/60))} دقيقة لعب</div></div>
+  <div class="chips"><button class="chip${S.settings.sound?' on':''}" data-act="tgl" data-k="sound">🔊 المؤثرات</button><button class="chip${S.settings.voice?' on':''}" data-act="tgl" data-k="voice">🗣️ صوت الحروف</button><button class="chip" data-act="extra">+١٠ دقائق اليوم</button></div>
+  <div class="btns"><button class="btn" data-act="saveset">حفظ</button><button class="btn red sm" data-act="reset1">مسح التقدم</button></div>`);
+}
+function limitSec(){return S.settings.limit?(S.settings.limit+S.play.extra)*60:Infinity}
+function onBreak(){return S.play.sec>=limitSec()}
+function checkBreak(){if(onBreak()&&!ovEl){showBreak()}}
+function showBreak(){
+  overlay(`<h2>استراحة البطل 😴</h2><div class="mbox">🛌</div><div class="muted">لعبت كثير اليوم وتعلمت حروف وآيات! الأبطال يرتاحون عشان يرجعون أقوى. نشوفك بكرة 💪</div><div class="earn" style="font-size:22px">صندوقك اليومي ينتظرك بكرة 🎁</div><button class="btn stone sm" data-act="parentbreak">للوالدين</button>`);
+  cur.breakOpen=true;
+}
+setInterval(()=>{
+  if(document.visibilityState!=='visible')return;
+  if(S.play.date!==today()){S.play={date:today(),sec:0,extra:0}}
+  if(cur.breakOpen)return;
+  S.play.sec++;if(S.play.sec%10===0)save();
+  if(onBreak()&&!app.classList.contains('ingame')&&!ovEl)showBreak();
+},1000);
+
+/* ================= EVENTS ================= */
+function onClick(e){
+  const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act;ac();
+  switch(a){
+    case 'go':stopGame();closeOv(true);cur.breakOpen=false;go(b.dataset.to,{tab:b.dataset.tab});sfx.tap();break;
+    case 'tab':go('shop',{tab:b.dataset.tab});sfx.tap();break;
+    case 'daily':claimDaily();break;
+    case 'letter':startLetter(+b.dataset.i);break;
+    case 'boss':startBoss(+b.dataset.w);break;
+    case 'surah':startSurah(+b.dataset.k);break;
+    case 'buy':buy(b.dataset.id);break;
+    case 'equip':S.equip[b.dataset.cat]=b.dataset.id;save();sfx.good();go('shop',{tab:b.dataset.cat});break;
+    case 'upg':buyUpg(b.dataset.id);break;
+    case 'buybox':case 'buyboxagain':if(S.coins<BOX_PRICE){closeOv(true);notEnough('coin');break}S.coins-=BOX_PRICE;save();updTop();openBoxAnim('mystery',()=>go('shop',{tab:'box'}));break;
+    case 'lvlchest':{const z=b.parentElement;b.remove();const o=rollBox('level');applyRoll(o);sfx.chest();confetti(40);const d=document.createElement('div');d.innerHTML=rollHTML(o);z.insertBefore(d.firstChild,z.querySelector('.btns'));const m=z.querySelector('.muted');if(m)m.remove();updTop();break}
+    case 'closeov':closeOv();break;
+    case 'nextlvl':{const n=cur.next;closeOv(true);if(onBreak()){go('home');break}n&&n();break}
+    case 'retry':{const r=cur.retry;closeOv(true);r&&r();break}
+    case 'quit':stopGame();go('home');break;
+    case 'sayprompt':G&&G.say&&G.say();break;
+    case 'lane':G&&G.move&&G.move(+b.dataset.d);break;
+    case 'saylet':{const L=LETTERS[cur.learn.i];const el=document.getElementById('bigl');el.classList.remove('tap');void el.offsetWidth;el.classList.add('tap');sfx.coin();say(L[1]);break}
+    case 'sayword':{const L=LETTERS[cur.learn.i];say(L[2]);break}
+    case 'learnnext':{const n=cur.learn.next;n&&n();break}
+    case 'playayah':{const n=+b.dataset.n;const k=cur.q.k;document.querySelectorAll('.ayah').forEach(x=>x.classList.remove('playing'));if(b.classList.contains('ayah'))b.classList.add('playing');playAyah(SURAHS[k].id,n,()=>b.classList.remove('playing'));break}
+    case 'startbuild':buildAyah(cur.q.k,0,cur.q.run);break;
+    case 'word':cur.word&&cur.word(b);break;
+    case 'opt':cur.opt&&cur.opt(b);break;
+    case 'pgok':{const v=+(document.getElementById('pg_in')||{}).value;if(v===cur.pg.ans){const t=cur.pg.then;closeOv(true);t?t():settings()}else{sfx.bad();toast('إجابة غير صحيحة')}break}
+    case 'parentbreak':closeOv(true);cur.breakOpen=false;parentGate(()=>{settings()});break;
+    case 'setlim':S.settings.limit=+b.dataset.m;save();b.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===b));break;
+    case 'tgl':S.settings[b.dataset.k]=!S.settings[b.dataset.k];save();b.classList.toggle('on',S.settings[b.dataset.k]);break;
+    case 'extra':S.play.extra+=10;save();toast('تمت إضافة ١٠ دقائق');break;
+    case 'saveset':{const v=(document.getElementById('nm_in')||{}).value;if(v&&v.trim())S.name=v.trim().slice(0,16);save();closeOv(true);go('home');break}
+    case 'reset1':b.outerHTML='<button class="btn red sm" data-act="reset2">متأكد؟ اضغط للمسح</button>';break;
+    case 'reset2':S=defState();save();closeOv(true);go('home');toast('تم مسح التقدم');break;
+  }
+}
+app.addEventListener('click',onClick);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'){save();try{speechSynthesis.cancel()}catch(e){}}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('pg_in')){const b=document.querySelector('[data-act="pgok"]');b&&b.click()}});
+
+if(S.play.date!==today())S.play={date:today(),sec:0,extra:0};
+go('home');
+</script>
+
+</body>
+</html>

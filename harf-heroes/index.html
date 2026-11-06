@@ -521,17 +521,33 @@ const sfx={
 
 /* ================= HUMAN VOICES ================= */
 // Letter names: real recordings (l/NN.mp3). A parent can replace any letter with their own voice (saved on this device).
-const IDB={db:null,open(){if(this.db)return Promise.resolve(this.db);return new Promise((res,rej)=>{try{const r=indexedDB.open('harf-heroes-audio',1);r.onupgradeneeded=()=>r.result.createObjectStore('letters');r.onsuccess=()=>{this.db=r.result;res(this.db)};r.onerror=()=>rej(r.error)}catch(e){rej(e)}})},
- async put(k,v){const db=await this.open();return new Promise((res,rej)=>{const t=db.transaction('letters','readwrite');t.objectStore('letters').put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})},
- async del(k){const db=await this.open();return new Promise((res,rej)=>{const t=db.transaction('letters','readwrite');t.objectStore('letters').delete(k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})},
- async all(){const db=await this.open();return new Promise(res=>{const out={};try{const r=db.transaction('letters').objectStore('letters').openCursor();r.onsuccess=()=>{const c=r.result;if(c){out[c.key]=c.value;c.continue()}else res(out)};r.onerror=()=>res(out)}catch(e){res(out)}})}};
+const IDB={db:null,open(){if(this.db)return Promise.resolve(this.db);return new Promise((res,rej)=>{try{const r=indexedDB.open('harf-heroes-audio',2);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('letters'))d.createObjectStore('letters');if(!d.objectStoreNames.contains('clips'))d.createObjectStore('clips')};r.onsuccess=()=>{this.db=r.result;res(this.db)};r.onerror=()=>rej(r.error)}catch(e){rej(e)}})},
+ st:k=>typeof k==='number'?'letters':'clips',
+ async put(k,v){const db=await this.open(),n=this.st(k);return new Promise((res,rej)=>{const t=db.transaction(n,'readwrite');t.objectStore(n).put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})},
+ async del(k){const db=await this.open(),n=this.st(k);return new Promise((res,rej)=>{const t=db.transaction(n,'readwrite');t.objectStore(n).delete(k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})},
+ async all(n){const db=await this.open();return new Promise(res=>{const out={};try{const r=db.transaction(n).objectStore(n).openCursor();r.onsuccess=()=>{const c=r.result;if(c){out[c.key]=c.value;c.continue()}else res(out)};r.onerror=()=>res(out)}catch(e){res(out)}})}};
+// CUSTOM: this device's own recordings. Number keys = letter names, string keys = other voice lines.
 const CUSTOM={};
-IDB.all().then(o=>{for(const k in o){try{CUSTOM[k]=URL.createObjectURL(o[k])}catch(e){}}}).catch(()=>{});
+['letters','clips'].forEach(n=>IDB.all(n).then(o=>{for(const k in o){try{CUSTOM[n==='letters'?+k:k]=URL.createObjectURL(o[k])}catch(e){}}}).catch(()=>{}));
+// Voice lines the family records: picture names, game explanations, encouragement.
+const CLIP_GROUPS=[
+ {id:'W',name:'أسماء الصور',items:LETTERS.map((L,i)=>({k:'W'+i,t:L[2],e:L[3]}))},
+ {id:'G',name:'شرح الألعاب',items:GAMES.map(g=>({k:'G_'+g.id,t:g.how,e:g.icon}))},
+ {id:'P',name:'تشجيع وتعليمات',items:[{k:'P1',t:'أحسنت!',e:'👏'},{k:'P2',t:'ممتاز يا بطل!',e:'🌟'},{k:'P3',t:'رهيب! كمّل!',e:'🔥'},{k:'P_try',t:'ولا يهمك، جرّب مرة ثانية',e:'💪'},{k:'P_win',t:'كفو! خلّصت المرحلة',e:'🏆'},{k:'P_learn',t:'اضغط على الحرف واسمعه',e:'👆'},{k:'P_quran',t:'اسمع المعلّم وردّد مع الأطفال',e:'📖'},{k:'P_box',t:'وش بيطلع لك؟ افتح الصندوق!',e:'🎁'}]}
+];
+const VCLIPS=[/*@@VCLIPS@@*/];
 const lcache={};let voiceEl=null;
 function playLetter(i){
   if(!S.settings.voice)return;
   try{if(voiceEl){voiceEl.pause()}const src=CUSTOM[i]||`l/${pad(i,2)}.mp3`;let a=lcache[src];if(!a){a=new Audio(src);a.preload='auto';lcache[src]=a}a.currentTime=0;voiceEl=a;const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}
 }
+function playClip(k,delay=0){
+  if(!S.settings.voice)return false;const src=CUSTOM[k]||(VCLIPS.includes(k)?`v/${k}.mp3`:null);if(!src)return false;
+  const go_=()=>{try{if(voiceEl)voiceEl.pause();let a=lcache[src];if(!a){a=new Audio(src);lcache[src]=a}a.currentTime=0;voiceEl=a;const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}};
+  if(delay)setTimeout(go_,delay);else go_();return true;
+}
+let lastPraise=0;
+function praise(){if(Date.now()-lastPraise<5000||Math.random()>.35)return;lastPraise=Date.now();playClip(['P1','P2','P3'][rnd(3)],350)}
 // Quran: teacher recites, children repeat after him.
 let qAudio=null,audioWarned=false;
 function playAyah(sid,n,onend){
@@ -737,7 +753,7 @@ function rollBox(kind){
 }
 function openMystery(){
   if(S.coins<BOX_PRICE){closeOv(true);notEnough('coin');return}
-  S.coins-=BOX_PRICE;S.boxes++;const o=rollBox('mystery');save();updTop();
+  S.coins-=BOX_PRICE;S.boxes++;const o=rollBox('mystery');save();updTop();playClip('P_box');
   const ov=overlay(`<h2>صندوق الحظ!</h2><div class="mbox shakebox" id="bx">🎁</div><div id="bxr"></div><div class="btns" id="bxb"></div>`,()=>go('shop',{tab:'box'}));
   sfx.tap();setTimeout(()=>sfx.tap(),300);setTimeout(()=>sfx.tap(),600);
   setTimeout(()=>{const bx=ov.querySelector('#bx');if(!bx)return;bx.textContent=o.rar==='legend'?'🌟':o.rar==='epic'?'💜':o.rar==='rare'?'💎':'✨';bx.className='mbox burst';
@@ -791,7 +807,7 @@ function startGameScreen(){stopGame();app.classList.add('ingame');scr.classList.
 function endWin(me,cfg){setTimeout(()=>{if(G!==me)return;G.stop();G=null;cfg.onWin()},900)}
 function endLose(me,retry){setTimeout(()=>{if(G===me)lose(retry)},600)}
 function lose(retry){
-  stopGame();S.coins+=10;save();updTop();
+  stopGame();S.coins+=10;save();updTop();playClip('P_try',300);
   overlay(`<h2 style="color:var(--red)">أوه! خلصت القلوب</h2><div class="mbox">💪</div><div class="muted">قربت! خذ ${ar(10)} عملات تشجيع وجرّب مرة ثانية</div><div class="btns"><button class="btn big" data-act="retry">حاول مرة ثانية</button><button class="btn stone" data-act="go" data-to="home">البيت</button></div>`);
   cur.retry=retry;
 }
@@ -841,7 +857,7 @@ function runShoot(cfg){
     if(o.l===st.target){
       st.hits++;st.combo++;const c2=perk('blaster')==='combo'?2:3;const mult=st.combo>=c2*2?3:st.combo>=c2?2:1;
       const gain=Math.round((5+hitBonus())*mult*(perk('blaster')==='gold'?2:1));run.coins+=gain;
-      explode(area,tx,ty,wc(o.l));sfx.boom();setTimeout(()=>sfx.coin(),90);floatTxt(area,tx-20,ty-20,'+'+ar(gain));
+      explode(area,tx,ty,wc(o.l));sfx.boom();praise();setTimeout(()=>sfx.coin(),90);floatTxt(area,tx-20,ty-20,'+'+ar(gain));
       o.el.remove();st.items.splice(st.items.indexOf(o),1);if(mult>1)showCombo(`كومبو ×${ar(mult)} 🔥`);
       if(cfg.rotate&&st.hits%2===0){st.target=cfg.target();setTimeout(sayT,350)}
       upd();if(st.hits>=goal){st.alive=false;cancelAnimationFrame(st.raf);sfx.good();confetti(30);endWin(me,cfg)}
@@ -901,7 +917,7 @@ function runRace(cfg){
     const blk=g.el.children[st.lane];
     if(st.lane===g.cl){
       st.ok++;st.combo++;st.streak++;const mult=st.combo>=(cp==='combo'?2:4)?2:1;
-      const gain=Math.round((8+hitBonus())*mult*(cp==='nitro'?1.5:cp==='gold'?2:1));run.coins+=gain;blk.classList.add('ok');sfx.good();setTimeout(()=>sfx.coin(),120);
+      const gain=Math.round((8+hitBonus())*mult*(cp==='nitro'?1.5:cp==='gold'?2:1));run.coins+=gain;blk.classList.add('ok');sfx.good();praise();setTimeout(()=>sfx.coin(),120);
       floatTxt(area,parseFloat(car.style.left),H-ch-60,'+'+ar(gain));car.classList.add('boost');setTimeout(()=>car.classList.remove('boost'),600);st.speed*=1.03;
       if(cp==='heal'&&st.streak%3===0&&L.hearts<L.max){L.hearts++;floatTxt(area,parseFloat(car.style.left),H-ch-90,'❤️+١','w')}
       if(mult>1)showCombo(`نيترو ×${ar(mult)} 🔥`);
@@ -933,7 +949,7 @@ function runListen(cfg){
     upd();setTimeout(()=>{if(alive)G.say()},350);
   }
   area.addEventListener('click',e=>{const b=e.target.closest('.opt');if(!b||!alive||b.disabled)return;const l=+b.dataset.l;
-    if(l===round.t){ok++;const gain=6+hitBonus();run.coins+=gain;b.classList.add('ok');sfx.good();floatOn(b,'+'+ar(gain));area.querySelectorAll('.opt').forEach(x=>x.disabled=true);upd();
+    if(l===round.t){ok++;const gain=6+hitBonus();run.coins+=gain;b.classList.add('ok');sfx.good();praise();floatOn(b,'+'+ar(gain));area.querySelectorAll('.opt').forEach(x=>x.disabled=true);upd();
       if(ok>=goal){alive=false;confetti(30);sfx.win();endWin(me,cfg)}else setTimeout(()=>{if(alive)next()},800)}
     else{run.mist++;sfx.bad();bump(b);b.disabled=true;b.style.opacity=.4;playLetter(l);setTimeout(()=>{if(alive)G.say()},900);
       if(!L.hit(b)){alive=false;upd();endLose(me,()=>runListen(cfg))}else upd()}});
@@ -955,7 +971,7 @@ function runMemory(cfg){
   const peek=Math.max(1.2,3.2-d*2);
   setTimeout(()=>{if(!alive)return;els.forEach(e=>e.classList.remove('up'));lock=false;const m=document.getElementById('mst');if(m)m.textContent='لاقِ كل حرف مع صورته'},peek*1000);
   area.addEventListener('click',e=>{const b=e.target.closest('.mcard');if(!b||lock||!alive||b.classList.contains('up'))return;
-    const c=cards[+b.dataset.i];b.classList.add('up');sfx.flip();if(c.k==='l')playLetter(c.l);open.push({b,c});
+    const c=cards[+b.dataset.i];b.classList.add('up');sfx.flip();if(c.k==='l')playLetter(c.l);else playClip('W'+c.l);open.push({b,c});
     if(open.length===2){lock=true;const [a,z]=open;open=[];
       if(a.c.l===z.c.l){matched++;const gain=8+hitBonus();run.coins+=gain;setTimeout(()=>{a.b.classList.add('done');z.b.classList.add('done');sfx.good();floatOn(z.b,'+'+ar(gain));upd();lock=false;
           if(matched>=pairs){alive=false;run.mist+=Math.max(0,Math.floor((miss-pairs)/2));confetti(30);sfx.win();endWin(me,cfg)}},350)}
@@ -984,7 +1000,7 @@ function runWhack(cfg){
   let acc=0;st.timer=setInterval(()=>{if(!st.alive)return;const dt=.1;if(st.slowT>0){st.slowT-=dt;if(st.slowT<=0)area.classList.remove('slowmo')}if(st.hintT>0)st.hintT-=dt;acc+=dt*(st.slowT>0?.5:1);if(acc>=Math.max(.45,.9-d*.4)){acc=0;pop()}},100);
   area.addEventListener('pointerdown',e=>{const m=e.target.closest('.mole');if(!m||!st.alive||!m.classList.contains('up'))return;e.preventDefault();clearTimeout(m._t);const l=+m.dataset.l;
     if(l===st.target){st.hits++;st.combo++;const c2=perk('blaster')==='combo'?2:3;const mult=st.combo>=c2?2:1;const gain=Math.round((5+hitBonus())*mult*(perk('blaster')==='gold'?2:1));run.coins+=gain;
-      m.classList.add('hit');m.classList.remove('up','hintglow');sfx.bonk();setTimeout(()=>sfx.coin(),80);floatOn(m,'+'+ar(gain));if(mult>1)showCombo(`كومبو ×${ar(mult)} 🔥`);
+      m.classList.add('hit');m.classList.remove('up','hintglow');sfx.bonk();praise();setTimeout(()=>sfx.coin(),80);floatOn(m,'+'+ar(gain));if(mult>1)showCombo(`كومبو ×${ar(mult)} 🔥`);
       if(cfg.rotate&&st.hits%2===0){st.target=cfg.target();setTimeout(sayT,300)}
       upd();if(st.hits>=goal){st.alive=false;clearInterval(st.timer);confetti(30);sfx.win();endWin(me,cfg)}}
     else{st.combo=0;run.mist++;hideCombo();sfx.bad();bump(m);m.classList.remove('up');floatOn(m,'هذا '+LETTERS[l][0],'w');setTimeout(sayT,450);
@@ -1004,7 +1020,7 @@ function runPick(cfg){
     upd();setTimeout(()=>{if(alive)G.say()},300);
   }
   area.addEventListener('click',e=>{const b=e.target.closest('.pcard');if(!b||!alive||b.disabled)return;const l=+b.dataset.l;
-    if(l===round.t){ok++;const gain=6+hitBonus();run.coins+=gain;b.classList.add('ok');sfx.good();floatOn(b,'+'+ar(gain));area.querySelectorAll('.pcard').forEach(x=>x.disabled=true);
+    if(l===round.t){ok++;const gain=6+hitBonus();run.coins+=gain;b.classList.add('ok');sfx.good();playClip('W'+l)||praise();floatOn(b,'+'+ar(gain));area.querySelectorAll('.pcard').forEach(x=>x.disabled=true);
       if(ok>=goal){alive=false;upd();confetti(30);sfx.win();endWin(me,cfg)}else{upd();setTimeout(()=>{if(alive)next()},800)}}
     else{run.mist++;sfx.bad();bump(b);b.disabled=true;b.style.opacity=.4;if(!L.hit(b)){alive=false;upd();endLose(me,()=>runPick(cfg))}else upd()}});
   next();
@@ -1045,7 +1061,7 @@ function chooseGames(i,boss){
 }
 function intro(gid,then){
   const g=GAMES.find(x=>x.id===gid);if(S.seen[gid]){then();return}
-  S.seen[gid]=1;save();sfx.levelup();confetti(25);
+  S.seen[gid]=1;save();sfx.levelup();confetti(25);playClip('G_'+gid,600);
   overlay(`<h2>لعبة جديدة! 🎉</h2><div class="tut">${g.icon}</div><b style="font-family:var(--f-display);font-size:26px">${g.name}</b><div class="muted" style="font-size:17px">${g.how}</div><button class="btn big gold" data-act="closeov">يلا!</button>`,then);
 }
 function playSeq(seq,mk,done){let k=0;const step=()=>{if(k>=seq.length){done();return}const gid=seq[k++];intro(gid,()=>RUNNERS[gid](mk(gid,step)))};step()}
@@ -1085,10 +1101,10 @@ function showLearn(i,next){
     <button class="bigl" id="bigl" data-act="saylet" aria-label="اسمع الحرف">${l}</button>
     <div class="hint">👆 اضغط على الحرف واسمعه</div>
     <div class="forms">${forms.map(f=>`<span>${f}</span>`).join('')}</div>
-    <div class="wordcard"><span class="emo">${emo}</span><span class="w">${wordHTML}</span></div>
+    <button class="wordcard" data-act="sayword"><span class="emo">${emo}</span><span class="w">${wordHTML}</span></button>
     <button class="btn big gold" data-act="learnnext">يلا نلعب! 🎯</button>
   </div>`;
-  cur.learn={i,next};setTimeout(()=>playLetter(i),300);
+  cur.learn={i,next};setTimeout(()=>{playLetter(i);playClip('W'+i,1500)},300);
 }
 
 /* ================= QURAN LEVEL ================= */
@@ -1096,7 +1112,7 @@ function startQPart(idx){
   if(!partOpen(idx)){sfx.bad();toast('كمّل اللي قبلها أولاً 🔒');return}
   const P=QPARTS[idx],s=SURAHS[P.k],tier=qTier(P.k);const run={mist:0,coins:0,idx};
   const ns=[];for(let n=P.from;n<=P.to;n++)ns.push(n);
-  go('qlisten',{ingame:true});cur.q={idx,run,ns};
+  go('qlisten',{ingame:true});cur.q={idx,run,ns};playClip('P_quran',400);
   const showBasm=s.id!==1&&P.p===0;
   scr.innerHTML=`${exitHdr('سورة '+s.name,'quran')}
   <div class="teach">👳 اسمع المعلّم ← 👦👧 ردّد مع الأطفال</div>
@@ -1204,7 +1220,7 @@ function finishLevel(o){
     ${upHTML}
     ${chest?`<div class="muted" id="chm">لقيت صندوق مفاجأة! افتحه 👇</div><button class="chestbtn" data-act="lvlchest" aria-label="افتح الصندوق">🎁</button>`:''}
     <div class="btns"><button class="btn big gold" data-act="nextlvl">التالي ▶</button><button class="btn stone" data-act="go" data-to="home">البيت</button></div>`);
-  cur.next=o.next;
+  cur.next=o.next;playClip('P_win',700);
   let c=0;const step=Math.max(1,Math.ceil(total/30));const iv=setInterval(()=>{c=Math.min(total,c+step);const el=ov.querySelector('#cnt');if(!el){clearInterval(iv);return}el.textContent=ar(c);if(c>=total){clearInterval(iv);sfx.coin()}},35);
   if(ups)setTimeout(()=>sfx.levelup(),900);
   updTop();
@@ -1231,25 +1247,32 @@ function settings(){
   <div class="set"><label>وقت اللعب اليومي</label><div class="chips">${[10,20,30,45,0].map(m=>`<button class="chip${m===lim?' on':''}" data-act="setlim" data-m="${m}">${m?ar(m)+' د':'بدون حد'}</button>`).join('')}</div>
   <div class="muted">اليوم: ${ar(Math.floor(S.play.sec/60))} دقيقة لعب</div></div>
   <div class="chips"><button class="chip${S.settings.sound?' on':''}" data-act="tgl" data-k="sound">🔊 المؤثرات</button><button class="chip${S.settings.voice?' on':''}" data-act="tgl" data-k="voice">🗣️ صوت الحروف</button><button class="chip" data-act="extra">+١٠ دقائق اليوم</button></div>
-  <button class="btn blue" data-act="voices">🎙️ أصوات الحروف (سجّل بصوتك)</button>
+  <button class="btn blue" data-act="voices">🎙️ سجّل بصوتك (حروف، صور، شرح)</button>
   <div class="btns"><button class="btn" data-act="saveset">حفظ</button><button class="btn red sm" data-act="reset1">مسح التقدم</button></div>`);
 }
-let vSel=0,rec=null;
+let vSel=0,vGrp='L',rec=null;
+function vItems(){if(vGrp==='L')return LETTERS.map((L,i)=>({k:i,t:'حرف '+L[1],e:L[0],lt:1}));return CLIP_GROUPS.find(g=>g.id===vGrp).items}
+function hasVoice(k){return !!CUSTOM[k]||(typeof k==='string'&&VCLIPS.includes(k))}
+function playSel(){if(typeof vSel==='number')playLetter(vSel);else if(!playClip(vSel))toast('ما فيه تسجيل لهذا بعد')}
 function voicesPanel(){
-  overlay(`<h2 style="font-size:26px">أصوات الحروف</h2><div class="muted">اختر حرف، واسمعه. إذا تبغى تغيّره سجّل بصوتك أو اختر ملف صوتي. الأخضر = صوتك.</div>
-  <div class="chips" id="vchips">${LETTERS.map((L,i)=>`<button class="chip lt${i===vSel?' on':''}${CUSTOM[i]?' cus':''}" data-act="vsel" data-i="${i}">${L[0]}</button>`).join('')}</div>
-  <div class="btns"><button class="btn sm blue" data-act="vplay">▶ اسمع</button><button class="btn sm red" data-act="vrec" id="vrec">🎙️ سجّل</button><button class="btn sm violet" data-act="vfile">📁 ملف</button>${CUSTOM[vSel]?'<button class="btn sm stone" data-act="vdel">↩️ الأصلي</button>':''}</div>
-  <div class="muted">التسجيل يشتغل لما تفتح اللعبة من رابطها المباشر. داخل Claude استخدم «ملف».</div>
+  const items=vItems();if(!items.some(x=>x.k===vSel))vSel=items[0].k;const sel=items.find(x=>x.k===vSel);
+  const tabs=[['L','الحروف'],...CLIP_GROUPS.map(g=>[g.id,g.name])];
+  overlay(`<h2 style="font-size:26px">سجّل بصوتك 🎙️</h2>
+  <div class="chips">${tabs.map(([k,t])=>`<button class="chip${k===vGrp?' on':''}" data-act="vgrp" data-g="${k}">${t}</button>`).join('')}</div>
+  <div class="chips">${items.map(x=>`<button class="chip${x.lt?' lt':''}${x.k===vSel?' on':''}${CUSTOM[x.k]?' cus':''}" data-act="vsel" data-k="${x.k}" style="${!x.lt&&!hasVoice(x.k)?'opacity:.55':''}">${x.e}</button>`).join('')}</div>
+  <div class="panel" style="width:100%"><div class="muted">قل:</div><b style="font-family:var(--f-letter);font-size:22px;line-height:1.6">«${sel.t}»</b></div>
+  <div class="btns"><button class="btn sm blue" data-act="vplay">▶ اسمع</button><button class="btn sm red" data-act="vrec" id="vrec">🎙️ سجّل</button><button class="btn sm violet" data-act="vfile">📁 ملف</button>${CUSTOM[vSel]?'<button class="btn sm stone" data-act="vdel">↩️ احذف تسجيلي</button>':''}</div>
+  <div class="muted">الأخضر = مسجّل على هذا الجهاز. التسجيل بالمايك يشتغل لما تفتح اللعبة من رابطها المباشر؛ داخل Claude استخدم «ملف».</div>
   <button class="btn" data-act="closeov">تم</button>`);
 }
-async function setCustom(i,blob){try{await IDB.put(i,blob)}catch(e){toast('ما قدرنا نحفظ الصوت على هذا الجهاز');return}try{if(CUSTOM[i])URL.revokeObjectURL(CUSTOM[i]);CUSTOM[i]=URL.createObjectURL(blob)}catch(e){}toast('تم حفظ صوتك لحرف '+LETTERS[i][0]+' ✅');playLetter(i);voicesPanel()}
+async function setCustom(k,blob){try{await IDB.put(k,blob)}catch(e){toast('ما قدرنا نحفظ الصوت على هذا الجهاز');return}try{if(CUSTOM[k])URL.revokeObjectURL(CUSTOM[k]);CUSTOM[k]=URL.createObjectURL(blob)}catch(e){}Object.keys(lcache).forEach(x=>{if(x.startsWith('blob:'))delete lcache[x]});toast('تم حفظ صوتك ✅');playSel();voicesPanel()}
 async function recLetter(){
   if(rec){try{rec.stop()}catch(e){}return}
-  try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});const chunks=[];const r=new MediaRecorder(stream);rec=r;
+  try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});const chunks=[];const r=new MediaRecorder(stream);rec=r;const key=vSel;
     r.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
-    r.onstop=()=>{stream.getTracks().forEach(t=>t.stop());rec=null;const b=new Blob(chunks,{type:r.mimeType||'audio/webm'});if(b.size>800)setCustom(vSel,b);else voicesPanel()};
+    r.onstop=()=>{stream.getTracks().forEach(t=>t.stop());rec=null;const b=new Blob(chunks,{type:r.mimeType||'audio/webm'});if(b.size>800)setCustom(key,b);else voicesPanel()};
     r.start();const b=document.getElementById('vrec');if(b){b.textContent='⏹ إيقاف';b.classList.add('violet')}
-    setTimeout(()=>{if(rec===r)try{r.stop()}catch(e){}},4000);
+    setTimeout(()=>{if(rec===r)try{r.stop()}catch(e){}},vGrp==='G'?9000:4000);
   }catch(e){rec=null;toast('الميكروفون غير متاح هنا. اختر «ملف» وارفع تسجيل من جوالك')}
 }
 document.getElementById('audfile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(f)setCustom(vSel,f)});
@@ -1310,11 +1333,13 @@ function onClick(e){
     case 'tgl':S.settings[b.dataset.k]=!S.settings[b.dataset.k];save();b.classList.toggle('on',S.settings[b.dataset.k]);break;
     case 'extra':S.play.extra+=10;save();toast('تمت إضافة ١٠ دقائق');break;
     case 'voices':voicesPanel();break;
-    case 'vsel':vSel=+b.dataset.i;playLetter(vSel);voicesPanel();break;
-    case 'vplay':playLetter(vSel);break;
+    case 'vgrp':vGrp=b.dataset.g;vSel=null;voicesPanel();break;
+    case 'vsel':vSel=vGrp==='L'?+b.dataset.k:b.dataset.k;playSel();voicesPanel();break;
+    case 'vplay':playSel();break;
+    case 'sayword':playClip('W'+cur.learn.i);break;
     case 'vrec':recLetter();break;
     case 'vfile':document.getElementById('audfile').click();break;
-    case 'vdel':IDB.del(vSel).catch(()=>{});try{URL.revokeObjectURL(CUSTOM[vSel])}catch(e){}delete CUSTOM[vSel];toast('رجع الصوت الأصلي');voicesPanel();break;
+    case 'vdel':IDB.del(vSel).catch(()=>{});try{URL.revokeObjectURL(CUSTOM[vSel])}catch(e){}delete lcache[CUSTOM[vSel]];delete CUSTOM[vSel];toast('انحذف تسجيلك');voicesPanel();break;
     case 'saveset':{const v=(document.getElementById('nm_in')||{}).value;if(v&&v.trim())S.name=v.trim().slice(0,16);save();closeOv(true);go('home');break}
     case 'reset1':b.outerHTML='<button class="btn red sm" data-act="reset2">متأكد؟ اضغط للمسح</button>';break;
     case 'reset2':S=defState();save();closeOv(true);go('home');toast('تم مسح التقدم');break;

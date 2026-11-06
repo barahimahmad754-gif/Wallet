@@ -280,6 +280,14 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 .blank{display:inline-block;min-width:80px;border-bottom:4px dashed var(--red);margin:0 4px}
 .qstep{font-family:var(--f-display);color:#fff;text-shadow:0 2px 0 var(--ink);font-size:20px;text-align:center;margin:6px 0}
 .rowc{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.aopts{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin-top:12px}
+.aopt{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px 10px;border:3px solid var(--ink);border-radius:10px;background:var(--tc);box-shadow:inset 0 -6px 0 rgba(0,0,0,.2),0 4px 0 var(--ink);transition:transform .15s}
+.aopt.lit{transform:scale(1.06);outline:5px solid var(--gold);outline-offset:2px}
+.aopt.ok{background:var(--grass)} .aopt.no{opacity:.4}
+.ashp{position:absolute;top:4px;right:6px;font-size:18px}
+.aplay{font-size:38px;width:78px;height:78px;border-radius:50%;border:3px solid var(--ink);background:#fff;padding:0;box-shadow:0 4px 0 var(--ink)}
+.achoose{--c:var(--gold);color:var(--ink);text-shadow:none;width:100%}
+.anum{width:38px;height:38px;flex:none;display:grid;place-items:center;border:3px solid var(--ink);border-radius:50%;background:var(--gold);font-family:var(--f-display);font-size:17px}
 
 /* OVERLAY */
 .ov{position:fixed;inset:0;z-index:50;background:rgba(15,20,40,.72);display:grid;place-items:center;padding:20px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px));animation:fade .2s}
@@ -426,7 +434,7 @@ const QAUDIO_REMOTE='https://everyayah.com/data/Minshawy_Teacher_128kbps/';
 
 /* ================= STATE ================= */
 const KEY='harf-heroes-v2';
-function defState(){return{name:'حمودي',coins:150,gems:5,xp:0,lvl:1,letters:{},boss:{},qp:{},seen:{},owned:['c1','b1','s1'],equip:{car:'c1',blaster:'b1',skin:'s1',pet:''},pets:[],stickers:{},setsDone:{},inv:{shield:1,slow:1,hint:1,x2:0},upg:{coin:0,heart:0,power:0},daily:{last:'',streak:0},play:{date:'',sec:0,extra:0},settings:{limit:20,sound:true,voice:true},boxes:0}}
+function defState(){return{name:'حمودي',coins:150,gems:5,xp:0,lvl:1,letters:{},boss:{},qp:{},seen:{},owned:['c1','b1','s1'],equip:{car:'c1',blaster:'b1',skin:'s1',pet:''},pets:[],stickers:{},setsDone:{},inv:{shield:1,slow:1,hint:1,x2:0},upg:{coin:0,heart:0,power:0},daily:{last:'',streak:0},play:{date:'',sec:0,extra:0},settings:{limit:20,sound:true,voice:true,reader:false},boxes:0}}
 function load(){
   const d=defState();
   try{if(!localStorage.getItem(KEY)){const v1=JSON.parse(localStorage.getItem('harf-heroes-v1')||'null');if(v1){['name','coins','gems','xp','lvl','letters','boss','daily'].forEach(k=>{if(v1[k]!==undefined)d[k]=v1[k]});if(v1.settings)Object.assign(d.settings,v1.settings);localStorage.setItem(KEY,JSON.stringify(d))}}}catch(e){}
@@ -538,28 +546,38 @@ const CLIP_GROUPS=[
 ];
 const VCLIPS=["G_listen", "G_memory", "G_pick", "G_race", "G_shoot", "G_simon", "G_whack", "P1", "P2", "P3", "P4", "P_box", "P_learn", "P_quran", "P_try", "P_win", "W0", "W1", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "W18", "W19", "W2", "W20", "W21", "W22", "W23", "W24", "W25", "W26", "W27", "W3", "W4", "W5", "W6", "W7", "W8", "W9"];
 const lcache={};let voiceEl=null;
-function playLetter(i){
-  if(!S.settings.voice)return;
-  try{if(voiceEl){voiceEl.pause()}const src=CUSTOM[i]||`l/${pad(i,2)}.mp3`;let a=lcache[src];if(!a){a=new Audio(src);a.preload='auto';lcache[src]=a}a.currentTime=0;voiceEl=a;const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}
-}
-function playClip(k,delay=0){
+// One voice at a time: lines wait their turn instead of cutting each other off.
+let vq=[];
+function voiceBusy(){return !!(voiceEl&&!voiceEl.paused&&!voiceEl.ended)||vq.length>0}
+function vStart(src){try{if(voiceEl){voiceEl.onended=null;voiceEl.onerror=null;voiceEl.pause()}let a=lcache[src];if(!a){a=new Audio(src);a.preload='auto';lcache[src]=a}try{a.currentTime=0}catch(e){}voiceEl=a;
+  const nx=()=>{if(voiceEl!==a)return;a.onended=a.onerror=null;const n=vq.shift();if(n)vStart(n)};a.onended=nx;a.onerror=nx;const p=a.play();if(p&&p.catch)p.catch(nx)}catch(e){}}
+function vPlay(src,now){if(!S.settings.voice||!src)return;if(now){vq=[];vStart(src);return}
+  if(voiceEl&&!voiceEl.paused&&!voiceEl.ended){if(vq.length<3&&vq[vq.length-1]!==src)vq.push(src);return}vStart(src)}
+function vStop(){vq=[];if(voiceEl){voiceEl.onended=null;voiceEl.onerror=null;try{voiceEl.pause()}catch(e){}}}
+function playLetter(i,now){vPlay(CUSTOM[i]||`l/${pad(i,2)}.mp3`,now)}
+function playClip(k,delay=0,now){
   if(!S.settings.voice)return false;const src=CUSTOM[k]||(VCLIPS.includes(k)?`v/${k}.mp3`:null);if(!src)return false;
-  const go_=()=>{try{if(voiceEl)voiceEl.pause();let a=lcache[src];if(!a){a=new Audio(src);lcache[src]=a}a.currentTime=0;voiceEl=a;const p=a.play();if(p&&p.catch)p.catch(()=>{})}catch(e){}};
-  if(delay)setTimeout(go_,delay);else go_();return true;
+  if(delay)setTimeout(()=>vPlay(src,now),delay);else vPlay(src,now);return true;
 }
 let lastPraise=0;
-function praise(){if(Date.now()-lastPraise<5000||Math.random()>.35)return;lastPraise=Date.now();playClip(['P1','P2','P3','P4'][rnd(4)],350)}
+function praise(){if(voiceBusy()||qAudio||Date.now()-lastPraise<5000||Math.random()>.35)return;lastPraise=Date.now();playClip(['P1','P2','P3','P4'][rnd(4)])}
 // Quran: teacher recites, children repeat after him.
 let qAudio=null,audioWarned=false;
-function playAyah(sid,n,onend){
-  stopAyah();const name=pad(sid,3)+pad(n,3)+'.mp3';let triedRemote=false;
+let ayTok=null;
+function playAyah(sid,n,onend,part){
+  stopAyah();const tok={};ayTok=tok;let waited=0;
+  const begin=()=>{if(ayTok!==tok)return;if(voiceBusy()&&waited<6000){waited+=150;setTimeout(begin,150);return}
+  const name=pad(sid,3)+pad(n,3)+'.mp3';let triedRemote=false,done=false;
   const a=new Audio('q/'+name);qAudio=a;
-  a.onended=()=>{if(qAudio===a){qAudio=null;onend&&onend(true)}};
+  const fin=ok=>{if(done||qAudio!==a)return;done=true;try{a.pause()}catch(e){}qAudio=null;onend&&onend(ok)};
+  a.onended=()=>fin(true);
+  if(part)a.ontimeupdate=()=>{if(a.duration&&a.currentTime>=clamp(a.duration*.46,2.5,6.5))fin(true)};
   a.onerror=()=>{if(qAudio!==a)return;if(!triedRemote){triedRemote=true;a.src=QAUDIO_REMOTE+name;const p=a.play();if(p&&p.catch)p.catch(()=>{});return}
-    qAudio=null;if(!audioWarned){audioWarned=true;toast('ما قدرنا نشغّل التلاوة الحين. اقرأها مع أحد الكبار 🤍')}onend&&onend(false)};
-  try{const p=a.play();if(p&&p.catch)p.catch(()=>a.onerror())}catch(e){a.onerror()}
+    qAudio=null;done=true;if(!audioWarned){audioWarned=true;toast('ما قدرنا نشغّل التلاوة الحين. اقرأها مع أحد الكبار 🤍')}onend&&onend(false)};
+  try{const p=a.play();if(p&&p.catch)p.catch(()=>a.onerror())}catch(e){a.onerror()}};
+  begin();
 }
-function stopAyah(){if(qAudio){try{qAudio.pause()}catch(e){}qAudio.onended=null;qAudio.onerror=null;qAudio=null}}
+function stopAyah(){ayTok=null;if(qAudio){try{qAudio.pause()}catch(e){}qAudio.onended=null;qAudio.onerror=null;qAudio=null}}
 
 /* ================= FX ================= */
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
@@ -593,7 +611,7 @@ function starStr(n,max=3){let s='<span class="stars">';for(let i=0;i<max;i++)s+=
 /* ================= HOME ================= */
 function lettersDone(){return LETTERS.reduce((a,_,i)=>a+(S.letters[i]?1:0),0)}
 function renderHome(){
-  const dailyOk=S.daily.last!==today();
+  const dailyOk=S.daily.last!==today()&&S.daily.skip!==today();
   const st=S.daily.last===today()||S.daily.last===yesterday()?S.daily.streak:0;
   let streak='';for(let i=1;i<=7;i++)streak+=`<span class="${i<=((st-1)%7)+1&&st>0?'on':''}">${ar(i)}</span>`;
   const pet=eq('pet');const qd=QPARTS.filter(p=>S.qp[p.key]).length;
@@ -684,7 +702,7 @@ function renderShop(){
   }else if(tab==='box'){
     h+=`<div class="panel boxzone"><div class="mbox">🎁</div><b style="font-family:var(--f-display);font-size:26px">صندوق الحظ</b>
       <div class="odds"><span>🃏 ملصقات</span><span>🛡️ قوى خارقة</span><span>🐲 حيوانات أليفة</span><span>🚗 سيارات وأسلحة وشخصيات</span><span>💎 جواهر</span><span>⭐ خبرة</span><span>🪙 عملات قليلة</span></div>
-      <button class="btn big violet" data-act="buybox" style="display:flex;gap:6px;align-items:center">افتح ${COIN}${ar(BOX_PRICE)}</button>
+      <button class="btn big violet" data-act="buybox" style="display:flex;gap:6px;align-items:center">${S.inv.freebox>0?`افتح مجاناً 🎁×${ar(S.inv.freebox)}`:`افتح ${COIN}${ar(BOX_PRICE)}`}</button>
       <div class="muted">فتحت ${ar(S.boxes)} صندوق</div></div>`;
   }else{
     const list=tab==='car'?CARS:tab==='blaster'?BLASTERS:SKINS;
@@ -753,8 +771,9 @@ function rollBox(kind){
   return giveSticker('common');
 }
 function openMystery(){
-  if(S.coins<BOX_PRICE){closeOv(true);notEnough('coin');return}
-  S.coins-=BOX_PRICE;S.boxes++;const o=rollBox('mystery');save();updTop();playClip('P_box');
+  const free=(S.inv.freebox||0)>0;
+  if(!free&&S.coins<BOX_PRICE){closeOv(true);notEnough('coin');return}
+  if(free)S.inv.freebox--;else S.coins-=BOX_PRICE;S.boxes++;const o=rollBox('mystery');save();updTop();playClip('P_box');
   const ov=overlay(`<h2>صندوق الحظ!</h2><div class="mbox shakebox" id="bx">🎁</div><div id="bxr"></div><div class="btns" id="bxb"></div>`,()=>go('shop',{tab:'box'}));
   sfx.tap();setTimeout(()=>sfx.tap(),300);setTimeout(()=>sfx.tap(),600);
   setTimeout(()=>{const bx=ov.querySelector('#bx');if(!bx)return;bx.textContent=o.rar==='legend'?'🌟':o.rar==='epic'?'💜':o.rar==='rare'?'💎':'✨';bx.className='mbox burst';
@@ -972,7 +991,7 @@ function runMemory(cfg){
   const peek=Math.max(1.2,3.2-d*2);
   setTimeout(()=>{if(!alive)return;els.forEach(e=>e.classList.remove('up'));lock=false;const m=document.getElementById('mst');if(m)m.textContent='لاقِ كل حرف مع صورته'},peek*1000);
   area.addEventListener('click',e=>{const b=e.target.closest('.mcard');if(!b||lock||!alive||b.classList.contains('up'))return;
-    const c=cards[+b.dataset.i];b.classList.add('up');sfx.flip();if(c.k==='l')playLetter(c.l);else playClip('W'+c.l);open.push({b,c});
+    const c=cards[+b.dataset.i];b.classList.add('up');sfx.flip();if(c.k==='l')playLetter(c.l,true);else playClip('W'+c.l,0,true);open.push({b,c});
     if(open.length===2){lock=true;const [a,z]=open;open=[];
       if(a.c.l===z.c.l){matched++;const gain=8+hitBonus();run.coins+=gain;setTimeout(()=>{a.b.classList.add('done');z.b.classList.add('done');sfx.good();floatOn(z.b,'+'+ar(gain));upd();lock=false;
           if(matched>=pairs){alive=false;run.mist+=Math.max(0,Math.floor((miss-pairs)/2));confetti(30);sfx.win();endWin(me,cfg)}},350)}
@@ -1105,7 +1124,7 @@ function showLearn(i,next){
     <button class="wordcard" data-act="sayword"><span class="emo">${emo}</span><span class="w">${wordHTML}</span></button>
     <button class="btn big gold" data-act="learnnext">يلا نلعب! 🎯</button>
   </div>`;
-  cur.learn={i,next};setTimeout(()=>{playLetter(i);playClip('W'+i,1500)},300);
+  cur.learn={i,next};setTimeout(()=>{playLetter(i);playClip('W'+i)},300);
 }
 
 /* ================= QURAN LEVEL ================= */
@@ -1120,7 +1139,7 @@ function startQPart(idx){
   <div class="rowc" style="margin:10px 0"><button class="btn blue" data-act="playall">▶ استمع للكل</button></div>
   ${showBasm?`<button class="basm" data-act="playbasm">${BASMALA}</button>`:''}
   <div class="ayat">${ns.map(n=>`<button class="ayah" data-act="playayah" data-n="${n}"><span class="an">${ar(n+1)}</span><span class="tx">${s.ayat[n]}</span><span>🔊</span></button>`).join('')}</div>
-  <div class="rowc" style="margin-top:16px"><button class="btn big gold" data-act="startbuild">ابدأ البناء 🧱</button></div>`;
+  <div class="rowc" style="margin-top:16px"><button class="btn big gold" data-act="startbuild">${S.settings.reader?'ابدأ البناء 🧱':'يلا نحفظ! 🎧'}</button></div>`;
 }
 const BASMALA='بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ';
 function playAll(){
@@ -1172,6 +1191,77 @@ function buildAyah(idx,j,run,ci=0){
     }
   };
 }
+
+/* ---- Quran by ear: for children who can't read yet ---- */
+const coinsHTML=run=>`<div class="cur" style="margin-inline-start:auto">${COIN}<span id="gc">${ar(run.coins)}</span></div>`;
+function qDone(idx,run){
+  const P=QPARTS[idx],s=SURAHS[P.k];
+  const st=run.mist<=1?3:run.mist<=4?2:1;const first=!S.qp[P.key];S.qp[P.key]=Math.max(S.qp[P.key]||0,st);
+  const nAy=P.to-P.from+1;const qb=perk('skin')==='quran'?1.5:1;const last=P.to===s.ayat.length-1;
+  finishLevel({stars:st,game:Math.round(run.coins*qb),base:(first?70:25)+nAy*8,xp:first?60:30,chest:(first?.6:.25)+(perk('skin')==='lucky'?.2:0),big:first&&last,
+    note:first&&last?`🌟 ختمت سورة ${s.name}!`:'',next:()=>{if(idx+1<QPARTS.length)startQPart(idx+1);else go('quran')}});
+}
+// Stage 1: listen to the teacher, repeat with the children, tap "I repeated".
+function qRepeat(idx,run,j=0,rep=0){
+  const P=QPARTS[idx],s=SURAHS[P.k],reps=qTier(P.k)===2?3:2,n=P.from+j,total=P.to-P.from+1;
+  go('qrep',{ingame:true});cur.q={idx,run};
+  scr.innerHTML=`${exitHdr('اسمع وردّد','quran',coinsHTML(run))}
+  <div class="prog"><i style="width:${(j*reps+rep)/(total*reps)*100}%"></i></div>
+  <div class="teach" style="margin-top:10px">👳 المعلّم يقرأ ← 👦👧 ردّد مع الأطفال بصوت عالي</div>
+  <div class="panel" style="margin-top:12px;display:flex;gap:10px;align-items:center"><span class="an anum">${ar(n+1)}</span><div class="qtext" style="flex:1">${s.ayat[n]}</div></div>
+  <div class="stat" style="margin-top:10px">المرة ${ar(rep+1)} من ${ar(reps)}</div>
+  <div class="rowc" style="margin-top:10px"><button class="bigspk" id="rspk" data-act="rplay" aria-label="اسمع">🔊</button></div>
+  <div class="rowc" style="margin-top:14px"><button class="btn big gold" id="rdone" data-act="rdone" disabled>✋ ردّدت!</button></div>`;
+  cur.rplay=()=>{const b=document.getElementById('rspk');if(b)b.classList.add('playing');
+    playAyah(s.id,n+1,()=>{const x=document.getElementById('rspk');if(x)x.classList.remove('playing');const d=document.getElementById('rdone');if(d){d.disabled=false;d.classList.add('hintglow')}})};
+  cur.rdone=()=>{run.coins+=3;sfx.coin();praise();
+    if(rep+1<reps)qRepeat(idx,run,j,rep+1);else if(j+1<total)qRepeat(idx,run,j+1,0);else qNextAyah(idx,run,0)};
+  setTimeout(()=>{if(cur.name==='qrep')cur.rplay()},350);
+}
+const ACOL=['#E5484D','#2E86DE','#4FAE32','#F28C28','#8B6CF0','#167A70'],ASHP=['⭐','🌙','☀️','🍀','💎','🔥'];
+function audioOpts(opts,label){return `<div class="aopts">${opts.map((o,i)=>`<div class="aopt" id="ao${i}" style="--tc:${ACOL[i]}"><span class="ashp">${ASHP[i]}</span><button class="aplay" data-act="aplay" data-i="${i}" aria-label="اسمع">🔊</button><button class="btn sm achoose" data-act="achoose" data-i="${i}">${label}</button></div>`).join('')}</div>`}
+function chainPlay(list,i=0){if(i>=list.length)return;const o=list[i];document.querySelectorAll('.aopt').forEach(x=>x.classList.remove('lit'));const el=document.getElementById('ao'+o.i);if(el)el.classList.add('lit');
+  playAyah(o.sid,o.n+1,ok=>{if(el)el.classList.remove('lit');if(ok)setTimeout(()=>chainPlay(list,i+1),250)},true)}
+// Stage 2: which ayah comes next? Answer by listening only.
+function qNextAyah(idx,run,j=0){
+  const P=QPARTS[idx],s=SURAHS[P.k],total=P.to-P.from+1;
+  if(j>=total){if(qTier(P.k)>=1&&total>=3)qOrderAudio(idx,run);else qDone(idx,run);return}
+  const n=P.from+j,prev=n-1;
+  let pool=[];s.ayat.forEach((_,m)=>{if(m!==n&&m!==prev)pool.push({sid:s.id,n:m})});
+  if(pool.length<2){const k2=(P.k+1)%SURAHS.length;SURAHS[k2].ayat.forEach((_,m)=>pool.push({sid:SURAHS[k2].id,n:m}))}
+  const near=pool.filter(o=>o.sid===s.id&&Math.abs(o.n-n)<=3);const pick=shuffle(near.length>=2?near:pool).slice(0,2);
+  const opts=shuffle([{sid:s.id,n,ok:1},...pick]).map((o,i)=>Object.assign(o,{i}));
+  go('qnext',{ingame:true});cur.q={idx,run};
+  scr.innerHTML=`${exitHdr(prev<0?'وش أول آية؟':'وش اللي بعدها؟','quran',coinsHTML(run))}
+  <div class="prog"><i style="width:${j/total*100}%"></i></div>
+  ${prev>=0?`<div class="stat" style="margin-top:8px">👂 اسمع هذي الآية:</div><button class="ayah" data-act="qprev" style="margin-top:6px"><span class="an">${ar(prev+1)}</span><span class="tx">${s.ayat[prev]}</span><span>🔊</span></button>
+  <div class="stat" style="margin-top:12px">وش الآية اللي تجي بعدها؟ اسمع واختر 👇</div>`:`<div class="stat" style="margin-top:10px">👂 وش أول آية في سورة ${s.name}؟ اسمع واختر 👇</div>`}
+  ${audioOpts(opts,'✓ هذي')}`;
+  let done=false;
+  cur.qprev=()=>playAyah(s.id,prev+1,null,true);
+  cur.aplay=i=>{const el=document.getElementById('ao'+i);document.querySelectorAll('.aopt').forEach(x=>x.classList.remove('lit'));if(el)el.classList.add('lit');playAyah(opts[i].sid,opts[i].n+1,()=>el&&el.classList.remove('lit'),true)};
+  cur.achoose=(i,b)=>{if(done)return;const el=document.getElementById('ao'+i);
+    if(opts[i].ok){done=true;stopAyah();el.classList.add('ok');run.coins+=8;document.getElementById('gc').textContent=ar(run.coins);sfx.good();setTimeout(()=>sfx.coin(),120);praise();
+      setTimeout(()=>{if(cur.name==='qnext')qNextAyah(idx,run,j+1)},1100)}
+    else{run.mist++;sfx.bad();bump(el);el.classList.add('no');b.disabled=true}};
+  setTimeout(()=>{if(cur.name!=='qnext')return;const seq=[];if(prev>=0)seq.push({sid:s.id,n:prev,i:-1});opts.forEach(o=>seq.push(o));chainPlay(seq)},500);
+}
+// Stage 3 (harder surahs): put the ayat in order, by ear.
+function qOrderAudio(idx,run){
+  const P=QPARTS[idx],s=SURAHS[P.k];const ns=[];for(let n=P.from;n<=P.to;n++)ns.push(n);
+  const opts=shuffle(ns.map(n=>({sid:s.id,n}))).map((o,i)=>Object.assign(o,{i}));let pos=0;
+  go('qordera',{ingame:true});cur.q={idx,run};
+  scr.innerHTML=`${exitHdr('رتّب بالسمع','quran',coinsHTML(run))}
+  <div class="stat" style="margin-top:8px" id="ost">اسمع كل وحدة، واختر الآية الأولى 👇</div>
+  <div class="seqdots" style="margin-top:8px">${ns.map((_,k)=>`<i id="od${k}"></i>`).join('')}</div>${audioOpts(opts,'✓ التالية')}`;
+  cur.aplay=i=>{const el=document.getElementById('ao'+i);document.querySelectorAll('.aopt').forEach(x=>x.classList.remove('lit'));if(el)el.classList.add('lit');playAyah(opts[i].sid,opts[i].n+1,()=>el&&el.classList.remove('lit'),true)};
+  cur.achoose=(i,b)=>{const el=document.getElementById('ao'+i);if(el.classList.contains('ok'))return;
+    if(opts[i].n===ns[pos]){pos++;stopAyah();el.classList.add('ok');b.textContent=ar(opts[i].n+1);b.disabled=true;document.getElementById('od'+(pos-1)).classList.add('on');run.coins+=5;document.getElementById('gc').textContent=ar(run.coins);sfx.place();
+      const st=document.getElementById('ost');if(st)st.textContent='ممتاز! وش اللي بعدها؟ 👇';
+      if(pos>=ns.length){sfx.good();confetti(20);setTimeout(()=>{if(cur.name==='qordera')qDone(idx,run)},1000)}}
+    else{run.mist++;sfx.bad();bump(el)}};
+}
+
 function afterBuild(idx,run){const P=QPARTS[idx];if(qTier(P.k)>=1&&P.to-P.from>=2)orderAyat(idx,run);else quiz(idx,run,0)}
 function orderAyat(idx,run){
   const P=QPARTS[idx],s=SURAHS[P.k];const ns=[];for(let n=P.from;n<=P.to;n++)ns.push(n);let pos=0;
@@ -1185,8 +1275,8 @@ function orderAyat(idx,run){
 }
 function quiz(idx,run,qn){
   const P=QPARTS[idx],s=SURAHS[P.k],tier=qTier(P.k);const Q=3+tier;const nOpt=tier===0?3:4;
-  if(qn>=Q){
-    const st=run.mist<=1?3:run.mist<=4?2:1;const first=!S.qp[P.key];S.qp[P.key]=Math.max(S.qp[P.key]||0,st);
+  if(qn>=Q){qDone(idx,run);return}
+  if(0){const st=run.mist<=1?3:run.mist<=4?2:1;const first=!S.qp[P.key];S.qp[P.key]=Math.max(S.qp[P.key]||0,st);
     const nAy=P.to-P.from+1;const qb=perk('skin')==='quran'?1.5:1;
     finishLevel({stars:st,game:Math.round(run.coins*qb),base:(first?70:25)+nAy*8,xp:first?60:30,chest:(first?.6:.25)+(perk('skin')==='lucky'?.2:0),big:first&&P.to===s.ayat.length-1,
       note:first&&P.to===s.ayat.length-1?`🌟 ختمت سورة ${s.name}!`:'',
@@ -1248,13 +1338,15 @@ function settings(){
   <div class="set"><label>وقت اللعب اليومي</label><div class="chips">${[10,20,30,45,0].map(m=>`<button class="chip${m===lim?' on':''}" data-act="setlim" data-m="${m}">${m?ar(m)+' د':'بدون حد'}</button>`).join('')}</div>
   <div class="muted">اليوم: ${ar(Math.floor(S.play.sec/60))} دقيقة لعب</div></div>
   <div class="chips"><button class="chip${S.settings.sound?' on':''}" data-act="tgl" data-k="sound">🔊 المؤثرات</button><button class="chip${S.settings.voice?' on':''}" data-act="tgl" data-k="voice">🗣️ صوت الحروف</button><button class="chip" data-act="extra">+١٠ دقائق اليوم</button></div>
+  <div class="chips"><button class="chip${S.settings.reader?' on':''}" data-act="tgl" data-k="reader">📖 يعرف يقرأ (بناء الآيات بالكلمات)</button></div>
+  <button class="btn violet" data-act="discipline">⚖️ مكافأة أو خصم</button>
   <button class="btn blue" data-act="voices">🎙️ سجّل بصوتك (حروف، صور، شرح)</button>
-  <div class="btns"><button class="btn" data-act="saveset">حفظ</button><button class="btn red sm" data-act="reset1">مسح التقدم</button></div>`);
+  <div class="btns"><button class="btn" data-act="saveset">حفظ</button><button class="btn red sm" data-act="progress">🗑️ حذف التقدم</button></div>`);
 }
 let vSel=0,vGrp='L',rec=null;
 function vItems(){if(vGrp==='L')return LETTERS.map((L,i)=>({k:i,t:'حرف '+L[1],e:L[0],lt:1}));return CLIP_GROUPS.find(g=>g.id===vGrp).items}
 function hasVoice(k){return !!CUSTOM[k]||(typeof k==='string'&&VCLIPS.includes(k))}
-function playSel(){if(typeof vSel==='number')playLetter(vSel);else if(!playClip(vSel))toast('ما فيه تسجيل لهذا بعد')}
+function playSel(){vStop();if(typeof vSel==='number')playLetter(vSel,true);else if(!playClip(vSel,0,true))toast('ما فيه تسجيل لهذا بعد')}
 function voicesPanel(){
   const items=vItems();if(!items.some(x=>x.k===vSel))vSel=items[0].k;const sel=items.find(x=>x.k===vSel);
   const tabs=[['L','الحروف'],...CLIP_GROUPS.map(g=>[g.id,g.name])];
@@ -1277,8 +1369,59 @@ async function recLetter(){
   }catch(e){rec=null;toast('الميكروفون غير متاح هنا. اختر «ملف» وارفع تسجيل من جوالك')}
 }
 document.getElementById('audfile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(f)setCustom(vSel,f)});
+
+/* ---- Parent: rewards, deductions, punishments, progress ---- */
+const REASONS_BAD=['ما سمع الكلام','تأخّر عن الصلاة','ما رتّب أغراضه','سلوك غلط'],REASONS_GOOD=['سمع الكلام','صلّى في وقتها','ساعد في البيت','أخلاق حلوة'];
+let dReason='',dMode='bad';
+function disciplinePanel(){
+  const R=dMode==='bad'?REASONS_BAD:REASONS_GOOD;
+  overlay(`<h2 style="font-size:26px">⚖️ مكافأة أو خصم</h2>
+  <div class="chips"><button class="chip${dMode==='bad'?' on':''}" data-act="dmode" data-m="bad">😔 خصم / عقاب</button><button class="chip${dMode==='good'?' on':''}" data-act="dmode" data-m="good">🌟 مكافأة</button></div>
+  <div class="set"><label>السبب (يشوفه ${esc(S.name)})</label><div class="chips">${R.map(r=>`<button class="chip${r===dReason?' on':''}" data-act="dreason" data-r="${r}">${r}</button>`).join('')}</div></div>
+  <div class="muted">عنده الحين: ${COIN} ${ar(S.coins)} · ${GEM} ${ar(S.gems)}</div>
+  ${dMode==='bad'?`<div class="chips"><button class="chip" data-act="dapply" data-c="-50">-٥٠ 🪙</button><button class="chip" data-act="dapply" data-c="-100">-١٠٠ 🪙</button><button class="chip" data-act="dapply" data-c="-300">-٣٠٠ 🪙</button><button class="chip" data-act="dapply" data-g="-2">-٢ 💎</button><button class="chip" data-act="dapply" data-g="-5">-٥ 💎</button></div>
+  <div class="chips"><button class="chip" data-act="dapply" data-lock="1">🔒 قفل اللعب لباقي اليوم</button><button class="chip" data-act="dapply" data-nodaily="1">🎁 بدون صندوق يومي اليوم</button></div>`
+  :`<div class="chips"><button class="chip" data-act="dapply" data-c="50">+٥٠ 🪙</button><button class="chip" data-act="dapply" data-c="100">+١٠٠ 🪙</button><button class="chip" data-act="dapply" data-c="300">+٣٠٠ 🪙</button><button class="chip" data-act="dapply" data-g="2">+٢ 💎</button><button class="chip" data-act="dapply" data-box="1">🎁 صندوق حظ مجاني</button><button class="chip" data-act="dapply" data-time="15">⏰ +١٥ دقيقة لعب</button></div>`}
+  <button class="btn stone" data-act="closeov">رجوع</button>`);
+}
+function applyDiscipline(b){
+  const c=+(b.dataset.c||0),g=+(b.dataset.g||0);let msg=[];
+  if(c){const before=S.coins;S.coins=Math.max(0,S.coins+c);msg.push(`${c>0?'+':'-'}${ar(Math.abs(S.coins-before))} عملة`)}
+  if(g){const before=S.gems;S.gems=Math.max(0,S.gems+g);msg.push(`${g>0?'+':'-'}${ar(Math.abs(S.gems-before))} جوهرة`)}
+  if(b.dataset.lock){S.play.sec=Math.max(S.play.sec,limitSec()===Infinity?0:limitSec());S.play.locked=today();msg.push('اللعب مقفول لباقي اليوم')}
+  if(b.dataset.nodaily){S.daily.skip=today();msg.push('بدون صندوق يومي اليوم')}
+  if(b.dataset.time){S.play.extra+=+b.dataset.time;S.play.locked=null;msg.push('+١٥ دقيقة لعب')}
+  if(b.dataset.box){S.inv.freebox=(S.inv.freebox||0)+1;msg.push('صندوق حظ مجاني')}
+  save();updTop();closeOv(true);
+  const bad=dMode==='bad';
+  if(bad){sfx.bad();playClip('P_try')}else{sfx.chest();confetti(60)}
+  overlay(`<h2 style="color:${bad?'var(--red)':'var(--grass-d)'}">${bad?'😔 خصم':'🌟 مكافأة!'}</h2><div class="mbox">${bad?'⚖️':'🎉'}</div>
+  <b style="font-family:var(--f-display);font-size:24px">${msg.join(' · ')}</b>${dReason?`<div class="muted" style="font-size:17px">السبب: ${dReason}</div>`:''}
+  ${bad?'<div class="muted">تقدر ترجعها بسلوك حلو 💪</div>':''}<button class="btn big" data-act="go" data-to="home">تمام</button>`);
+  dReason='';
+}
+function progressPanel(){
+  overlay(`<h2 style="font-size:26px">🗑️ حذف التقدم</h2><div class="muted">اختر وش تحذف. كل زر يطلب تأكيد.</div>
+  <div class="btns" style="flex-direction:column;width:100%">
+  <button class="btn red sm" data-act="wipe" data-w="letters">مسح تقدم الحروف</button>
+  <button class="btn red sm" data-act="wipe" data-w="quran">مسح تقدم القرآن</button>
+  <button class="btn red sm" data-act="wipe" data-w="items">سحب المشتريات (السيارات والأسلحة والشخصيات)</button>
+  <button class="btn red sm" data-act="wipe" data-w="money">تصفير العملات والجواهر</button>
+  <button class="btn red" data-act="wipe" data-w="all">مسح كل شيء والبداية من الصفر</button></div>
+  <div class="muted">تسجيلات صوتك ما تنحذف.</div><button class="btn stone" data-act="closeov">رجوع</button>`);
+}
+const WIPE_LABEL={letters:'تقدم الحروف',quran:'تقدم القرآن',items:'المشتريات',money:'العملات والجواهر',all:'كل شيء'};
+function wipe(w){
+  if(w==='letters'){S.letters={};S.boss={};S.seen={}}
+  if(w==='quran')S.qp={};
+  if(w==='items'){S.owned=['c1','b1','s1'];S.equip.car='c1';S.equip.blaster='b1';S.equip.skin='s1'}
+  if(w==='money'){S.coins=0;S.gems=0}
+  if(w==='all'){const nm=S.name,st=S.settings;S=defState();S.name=nm;S.settings=st}
+  save();closeOv(true);go('home');toast('تم مسح '+WIPE_LABEL[w]);
+}
+
 function limitSec(){return S.settings.limit?(S.settings.limit+S.play.extra)*60:Infinity}
-function onBreak(){return S.play.sec>=limitSec()}
+function onBreak(){return S.play.locked===today()||S.play.sec>=limitSec()}
 function checkBreak(){if(onBreak()&&!ovEl)showBreak()}
 function showBreak(){
   overlay(`<h2>استراحة البطل 😴</h2><div class="mbox">🛌</div><div class="muted">لعبت كثير اليوم وتعلمت حروف وآيات! الأبطال يرتاحون عشان يرجعون أقوى. نشوفك بكرة 💪</div><div class="earn" style="font-size:22px">صندوقك اليومي ينتظرك بكرة 🎁</div><button class="btn stone sm" data-act="parentbreak">للوالدين</button>`);
@@ -1287,6 +1430,7 @@ function showBreak(){
 setInterval(()=>{
   if(document.visibilityState!=='visible')return;
   if(S.play.date!==today()){S.play={date:today(),sec:0,extra:0}}
+  if(S.play.locked===today()&&S.play.sec<limitSec()&&limitSec()!==Infinity)S.play.sec=limitSec();
   if(cur.breakOpen)return;
   S.play.sec++;if(S.play.sec%10===0)save();
   if(onBreak()&&!app.classList.contains('ingame')&&!ovEl)showBreak();
@@ -1312,16 +1456,21 @@ function onClick(e){
     case 'closeov':closeOv();break;
     case 'nextlvl':{const n=cur.next;closeOv(true);if(onBreak()){go('home');break}n&&n();break}
     case 'retry':{const r=cur.retry;closeOv(true);r&&r();break}
-    case 'quit':stopGame();go('home');break;
-    case 'sayprompt':G&&G.say&&G.say();break;
+    case 'quit':stopGame();vStop();go('home');break;
+    case 'sayprompt':vStop();G&&G.say&&G.say();break;
     case 'pup':G&&G.pup&&G.pup(b.dataset.p);break;
     case 'lane':G&&G.move&&G.move(+b.dataset.d);break;
-    case 'saylet':{const el=document.getElementById('bigl');bump(el,'tap');sfx.coin();playLetter(cur.learn.i);break}
+    case 'saylet':{const el=document.getElementById('bigl');bump(el,'tap');sfx.coin();playLetter(cur.learn.i,true);break}
     case 'learnnext':{const n=cur.learn.next;n&&n();break}
     case 'playayah':{const n=+b.dataset.n;const s=SURAHS[QPARTS[cur.q.idx].k];document.querySelectorAll('.ayah').forEach(x=>x.classList.remove('playing'));if(b.classList.contains('ayah'))b.classList.add('playing');playAyah(s.id,n+1,()=>b.classList.remove('playing'));break}
     case 'playbasm':playAyah(1,1,null);break;
     case 'playall':playAll();break;
-    case 'startbuild':buildAyah(cur.q.idx,0,cur.q.run);break;
+    case 'startbuild':if(S.settings.reader)buildAyah(cur.q.idx,0,cur.q.run);else qRepeat(cur.q.idx,cur.q.run);break;
+    case 'rplay':cur.rplay&&cur.rplay();break;
+    case 'rdone':if(!b.disabled&&cur.rdone){b.disabled=true;cur.rdone()}break;
+    case 'qprev':cur.qprev&&cur.qprev();break;
+    case 'aplay':cur.aplay&&cur.aplay(+b.dataset.i);break;
+    case 'achoose':cur.achoose&&cur.achoose(+b.dataset.i,b);break;
     case 'word':cur.word&&cur.word(b);break;
     case 'qhint':cur.hint&&cur.hint();break;
     case 'qnext':cur.qnext&&cur.qnext();break;
@@ -1332,16 +1481,22 @@ function onClick(e){
     case 'parentbreak':closeOv(true);cur.breakOpen=false;parentGate(()=>settings());break;
     case 'setlim':S.settings.limit=+b.dataset.m;save();b.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===b));break;
     case 'tgl':S.settings[b.dataset.k]=!S.settings[b.dataset.k];save();b.classList.toggle('on',S.settings[b.dataset.k]);break;
-    case 'extra':S.play.extra+=10;save();toast('تمت إضافة ١٠ دقائق');break;
+    case 'extra':S.play.extra+=10;S.play.locked=null;save();toast('تمت إضافة ١٠ دقائق');break;
     case 'voices':voicesPanel();break;
     case 'vgrp':vGrp=b.dataset.g;vSel=null;voicesPanel();break;
     case 'vsel':vSel=vGrp==='L'?+b.dataset.k:b.dataset.k;playSel();voicesPanel();break;
     case 'vplay':playSel();break;
-    case 'sayword':playClip('W'+cur.learn.i);break;
+    case 'sayword':playClip('W'+cur.learn.i,0,true);break;
     case 'vrec':recLetter();break;
     case 'vfile':document.getElementById('audfile').click();break;
     case 'vdel':IDB.del(vSel).catch(()=>{});try{URL.revokeObjectURL(CUSTOM[vSel])}catch(e){}delete lcache[CUSTOM[vSel]];delete CUSTOM[vSel];toast('انحذف تسجيلك');voicesPanel();break;
     case 'saveset':{const v=(document.getElementById('nm_in')||{}).value;if(v&&v.trim())S.name=v.trim().slice(0,16);save();closeOv(true);go('home');break}
+    case 'discipline':dMode='bad';dReason='';disciplinePanel();break;
+    case 'dmode':dMode=b.dataset.m;dReason='';disciplinePanel();break;
+    case 'dreason':dReason=dReason===b.dataset.r?'':b.dataset.r;disciplinePanel();break;
+    case 'dapply':applyDiscipline(b);break;
+    case 'progress':progressPanel();break;
+    case 'wipe':if(b.dataset.sure){wipe(b.dataset.w)}else{b.dataset.sure=1;b.textContent='⚠️ متأكد؟ اضغط مرة ثانية'}break;
     case 'reset1':b.outerHTML='<button class="btn red sm" data-act="reset2">متأكد؟ اضغط للمسح</button>';break;
     case 'reset2':S=defState();save();closeOv(true);go('home');toast('تم مسح التقدم');break;
   }

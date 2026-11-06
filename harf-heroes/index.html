@@ -71,11 +71,11 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 
 /* HOME */
 .stage{position:relative;height:200px;border:3px solid var(--ink);border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#7CC4F7,#BFE6FF 60%,var(--grass) 60% 66%,var(--dirt) 66%);box-shadow:0 5px 0 var(--ink);width:100%;padding:0;display:block}
-.stage .hero{position:absolute;bottom:58px;right:28%;width:66px}
+.stage .hero{position:absolute;bottom:50px;right:5%;width:132px}
 .stage .hero svg{width:100%;display:block;filter:drop-shadow(0 4px 0 rgba(0,0,0,.25))}
-.stage .gun{position:absolute;bottom:80px;right:6%;width:90px;transform:rotate(-8deg)}
-.stage .car{position:absolute;bottom:40px;left:10%;width:62px;transform:rotate(90deg)}
-.stage .pet{position:absolute;bottom:60px;right:50%;font-size:40px;line-height:1}
+.stage .car{position:absolute;bottom:52px;left:3%;width:min(52%,230px)}
+.stage .car svg{width:100%;display:block}
+.stage .pet{position:absolute;bottom:14px;right:38%;font-size:36px;line-height:1}
 .stage .tag{position:absolute;top:8px;right:10px;font-family:var(--f-display);font-size:16px;background:rgba(27,36,24,.75);color:#fff;border-radius:4px;padding:0 8px}
 .stage .bob{animation:bob 2.4s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-6px)}}
@@ -129,8 +129,8 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 .card{background:var(--paper);border:3px solid var(--ink);border-radius:8px;box-shadow:0 4px 0 var(--ink);padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;min-width:0}
 .card .pic{height:84px;width:100%;display:grid;place-items:center;background:linear-gradient(#CFE9FF,#E9F5FF);border:2px solid var(--ink);border-radius:6px;font-size:54px;line-height:1}
-.card .pic svg{max-height:70px;max-width:80%}
-.card .pic.car svg{transform:rotate(90deg);max-height:90px}
+.card .pic svg{max-height:76px;max-width:92%}
+.card .pic.car svg{width:92%}
 .card .nm{font-family:var(--f-display);font-size:18px;text-align:center}
 .card .perk{font-size:13px;font-weight:800;text-align:center;color:var(--gem-d);line-height:1.3;min-height:34px}
 .card .btn{width:100%;font-size:17px;padding:4px 8px;display:flex;justify-content:center;align-items:center;gap:4px}
@@ -306,7 +306,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 .reveal{font-family:var(--f-display);font-size:28px;display:flex;flex-direction:column;align-items:center;gap:6px}
 .reveal .rbadge{font-size:16px;color:#fff;border:2px solid var(--ink);border-radius:4px;padding:0 10px;background:var(--stone)}
 .reveal .rbadge.rare{background:var(--blue)} .reveal .rbadge.epic{background:var(--violet)} .reveal .rbadge.legend{background:var(--gold);color:var(--ink)}
-.reveal .rpic{width:120px;height:90px;display:grid;place-items:center;font-size:76px;line-height:1}
+.reveal .rpic{width:180px;height:100px;display:grid;place-items:center;font-size:76px;line-height:1}
 .reveal .rpic svg{max-width:100%;max-height:100%}
 .reveal small{font-family:var(--f-body);font-size:14px;font-weight:800;color:var(--gem-d)}
 .burst{animation:burst .5s ease-out}
@@ -372,16 +372,16 @@ const GAMES=[
 const SURAHS=[{"id":114,"name":"الناس","ayat":["قُلۡ أَعُوذُ بِرَبِّ ٱلنَّاسِ","مَلِكِ ٱلنَّاسِ","إِلَٰهِ ٱلنَّاسِ","مِن شَرِّ ٱلۡوَسۡوَاسِ ٱلۡخَنَّاسِ","ٱلَّذِي يُوَسۡوِسُ فِي صُدُورِ ٱلنَّاسِ","مِنَ ٱلۡجِنَّةِ وَٱلنَّاسِ"]},{"id":113,"name":"الفلق","ayat":["قُلۡ أَعُوذُ بِرَبِّ ٱلۡفَلَقِ","مِن شَرِّ مَا خَلَقَ","وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ","وَمِن شَرِّ ٱلنَّفَّـٰثَٰتِ فِي ٱلۡعُقَدِ","وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ"]},{"id":112,"name":"الإخلاص","ayat":["قُلۡ هُوَ ٱللَّهُ أَحَدٌ","ٱللَّهُ ٱلصَّمَدُ","لَمۡ يَلِدۡ وَلَمۡ يُولَدۡ","وَلَمۡ يَكُن لَّهُۥ كُفُوًا أَحَدُۢ"]},{"id":111,"name":"المسد","ayat":["تَبَّتۡ يَدَآ أَبِي لَهَبٖ وَتَبَّ","مَآ أَغۡنَىٰ عَنۡهُ مَالُهُۥ وَمَا كَسَبَ","سَيَصۡلَىٰ نَارٗا ذَاتَ لَهَبٖ","وَٱمۡرَأَتُهُۥ حَمَّالَةَ ٱلۡحَطَبِ","فِي جِيدِهَا حَبۡلٞ مِّن مَّسَدِۭ"]},{"id":110,"name":"النصر","ayat":["إِذَا جَآءَ نَصۡرُ ٱللَّهِ وَٱلۡفَتۡحُ","وَرَأَيۡتَ ٱلنَّاسَ يَدۡخُلُونَ فِي دِينِ ٱللَّهِ أَفۡوَاجٗا","فَسَبِّحۡ بِحَمۡدِ رَبِّكَ وَٱسۡتَغۡفِرۡهُۚ إِنَّهُۥ كَانَ تَوَّابَۢا"]},{"id":109,"name":"الكافرون","ayat":["قُلۡ يَـٰٓأَيُّهَا ٱلۡكَٰفِرُونَ","لَآ أَعۡبُدُ مَا تَعۡبُدُونَ","وَلَآ أَنتُمۡ عَٰبِدُونَ مَآ أَعۡبُدُ","وَلَآ أَنَا۠ عَابِدٞ مَّا عَبَدتُّمۡ","وَلَآ أَنتُمۡ عَٰبِدُونَ مَآ أَعۡبُدُ","لَكُمۡ دِينُكُمۡ وَلِيَ دِينِ"]},{"id":108,"name":"الكوثر","ayat":["إِنَّآ أَعۡطَيۡنَٰكَ ٱلۡكَوۡثَرَ","فَصَلِّ لِرَبِّكَ وَٱنۡحَرۡ","إِنَّ شَانِئَكَ هُوَ ٱلۡأَبۡتَرُ"]},{"id":107,"name":"الماعون","ayat":["أَرَءَيۡتَ ٱلَّذِي يُكَذِّبُ بِٱلدِّينِ","فَذَٰلِكَ ٱلَّذِي يَدُعُّ ٱلۡيَتِيمَ","وَلَا يَحُضُّ عَلَىٰ طَعَامِ ٱلۡمِسۡكِينِ","فَوَيۡلٞ لِّلۡمُصَلِّينَ","ٱلَّذِينَ هُمۡ عَن صَلَاتِهِمۡ سَاهُونَ","ٱلَّذِينَ هُمۡ يُرَآءُونَ","وَيَمۡنَعُونَ ٱلۡمَاعُونَ"]},{"id":106,"name":"قريش","ayat":["لِإِيلَٰفِ قُرَيۡشٍ","إِۦلَٰفِهِمۡ رِحۡلَةَ ٱلشِّتَآءِ وَٱلصَّيۡفِ","فَلۡيَعۡبُدُواْ رَبَّ هَٰذَا ٱلۡبَيۡتِ","ٱلَّذِيٓ أَطۡعَمَهُم مِّن جُوعٖ وَءَامَنَهُم مِّنۡ خَوۡفِۭ"]},{"id":105,"name":"الفيل","ayat":["أَلَمۡ تَرَ كَيۡفَ فَعَلَ رَبُّكَ بِأَصۡحَٰبِ ٱلۡفِيلِ","أَلَمۡ يَجۡعَلۡ كَيۡدَهُمۡ فِي تَضۡلِيلٖ","وَأَرۡسَلَ عَلَيۡهِمۡ طَيۡرًا أَبَابِيلَ","تَرۡمِيهِم بِحِجَارَةٖ مِّن سِجِّيلٖ","فَجَعَلَهُمۡ كَعَصۡفٖ مَّأۡكُولِۭ"]},{"id":104,"name":"الهمزة","ayat":["وَيۡلٞ لِّكُلِّ هُمَزَةٖ لُّمَزَةٍ","ٱلَّذِي جَمَعَ مَالٗا وَعَدَّدَهُۥ","يَحۡسَبُ أَنَّ مَالَهُۥٓ أَخۡلَدَهُۥ","كَلَّاۖ لَيُنۢبَذَنَّ فِي ٱلۡحُطَمَةِ","وَمَآ أَدۡرَىٰكَ مَا ٱلۡحُطَمَةُ","نَارُ ٱللَّهِ ٱلۡمُوقَدَةُ","ٱلَّتِي تَطَّلِعُ عَلَى ٱلۡأَفۡـِٔدَةِ","إِنَّهَا عَلَيۡهِم مُّؤۡصَدَةٞ","فِي عَمَدٖ مُّمَدَّدَةِۭ"]},{"id":103,"name":"العصر","ayat":["وَٱلۡعَصۡرِ","إِنَّ ٱلۡإِنسَٰنَ لَفِي خُسۡرٍ","إِلَّا ٱلَّذِينَ ءَامَنُواْ وَعَمِلُواْ ٱلصَّـٰلِحَٰتِ وَتَوَاصَوۡاْ بِٱلۡحَقِّ وَتَوَاصَوۡاْ بِٱلصَّبۡرِ"]},{"id":102,"name":"التكاثر","ayat":["أَلۡهَىٰكُمُ ٱلتَّكَاثُرُ","حَتَّىٰ زُرۡتُمُ ٱلۡمَقَابِرَ","كَلَّا سَوۡفَ تَعۡلَمُونَ","ثُمَّ كَلَّا سَوۡفَ تَعۡلَمُونَ","كَلَّا لَوۡ تَعۡلَمُونَ عِلۡمَ ٱلۡيَقِينِ","لَتَرَوُنَّ ٱلۡجَحِيمَ","ثُمَّ لَتَرَوُنَّهَا عَيۡنَ ٱلۡيَقِينِ","ثُمَّ لَتُسۡـَٔلُنَّ يَوۡمَئِذٍ عَنِ ٱلنَّعِيمِ"]},{"id":101,"name":"القارعة","ayat":["ٱلۡقَارِعَةُ","مَا ٱلۡقَارِعَةُ","وَمَآ أَدۡرَىٰكَ مَا ٱلۡقَارِعَةُ","يَوۡمَ يَكُونُ ٱلنَّاسُ كَٱلۡفَرَاشِ ٱلۡمَبۡثُوثِ","وَتَكُونُ ٱلۡجِبَالُ كَٱلۡعِهۡنِ ٱلۡمَنفُوشِ","فَأَمَّا مَن ثَقُلَتۡ مَوَٰزِينُهُۥ","فَهُوَ فِي عِيشَةٖ رَّاضِيَةٖ","وَأَمَّا مَنۡ خَفَّتۡ مَوَٰزِينُهُۥ","فَأُمُّهُۥ هَاوِيَةٞ","وَمَآ أَدۡرَىٰكَ مَا هِيَهۡ","نَارٌ حَامِيَةُۢ"]},{"id":100,"name":"العاديات","ayat":["وَٱلۡعَٰدِيَٰتِ ضَبۡحٗا","فَٱلۡمُورِيَٰتِ قَدۡحٗا","فَٱلۡمُغِيرَٰتِ صُبۡحٗا","فَأَثَرۡنَ بِهِۦ نَقۡعٗا","فَوَسَطۡنَ بِهِۦ جَمۡعًا","إِنَّ ٱلۡإِنسَٰنَ لِرَبِّهِۦ لَكَنُودٞ","وَإِنَّهُۥ عَلَىٰ ذَٰلِكَ لَشَهِيدٞ","وَإِنَّهُۥ لِحُبِّ ٱلۡخَيۡرِ لَشَدِيدٌ","۞أَفَلَا يَعۡلَمُ إِذَا بُعۡثِرَ مَا فِي ٱلۡقُبُورِ","وَحُصِّلَ مَا فِي ٱلصُّدُورِ","إِنَّ رَبَّهُم بِهِمۡ يَوۡمَئِذٖ لَّخَبِيرُۢ"]},{"id":99,"name":"الزلزلة","ayat":["إِذَا زُلۡزِلَتِ ٱلۡأَرۡضُ زِلۡزَالَهَا","وَأَخۡرَجَتِ ٱلۡأَرۡضُ أَثۡقَالَهَا","وَقَالَ ٱلۡإِنسَٰنُ مَا لَهَا","يَوۡمَئِذٖ تُحَدِّثُ أَخۡبَارَهَا","بِأَنَّ رَبَّكَ أَوۡحَىٰ لَهَا","يَوۡمَئِذٖ يَصۡدُرُ ٱلنَّاسُ أَشۡتَاتٗا لِّيُرَوۡاْ أَعۡمَٰلَهُمۡ","فَمَن يَعۡمَلۡ مِثۡقَالَ ذَرَّةٍ خَيۡرٗا يَرَهُۥ","وَمَن يَعۡمَلۡ مِثۡقَالَ ذَرَّةٖ شَرّٗا يَرَهُۥ"]},{"id":98,"name":"البينة","ayat":["لَمۡ يَكُنِ ٱلَّذِينَ كَفَرُواْ مِنۡ أَهۡلِ ٱلۡكِتَٰبِ وَٱلۡمُشۡرِكِينَ مُنفَكِّينَ حَتَّىٰ تَأۡتِيَهُمُ ٱلۡبَيِّنَةُ","رَسُولٞ مِّنَ ٱللَّهِ يَتۡلُواْ صُحُفٗا مُّطَهَّرَةٗ","فِيهَا كُتُبٞ قَيِّمَةٞ","وَمَا تَفَرَّقَ ٱلَّذِينَ أُوتُواْ ٱلۡكِتَٰبَ إِلَّا مِنۢ بَعۡدِ مَا جَآءَتۡهُمُ ٱلۡبَيِّنَةُ","وَمَآ أُمِرُوٓاْ إِلَّا لِيَعۡبُدُواْ ٱللَّهَ مُخۡلِصِينَ لَهُ ٱلدِّينَ حُنَفَآءَ وَيُقِيمُواْ ٱلصَّلَوٰةَ وَيُؤۡتُواْ ٱلزَّكَوٰةَۚ وَذَٰلِكَ دِينُ ٱلۡقَيِّمَةِ","إِنَّ ٱلَّذِينَ كَفَرُواْ مِنۡ أَهۡلِ ٱلۡكِتَٰبِ وَٱلۡمُشۡرِكِينَ فِي نَارِ جَهَنَّمَ خَٰلِدِينَ فِيهَآۚ أُوْلَـٰٓئِكَ هُمۡ شَرُّ ٱلۡبَرِيَّةِ","إِنَّ ٱلَّذِينَ ءَامَنُواْ وَعَمِلُواْ ٱلصَّـٰلِحَٰتِ أُوْلَـٰٓئِكَ هُمۡ خَيۡرُ ٱلۡبَرِيَّةِ","جَزَآؤُهُمۡ عِندَ رَبِّهِمۡ جَنَّـٰتُ عَدۡنٖ تَجۡرِي مِن تَحۡتِهَا ٱلۡأَنۡهَٰرُ خَٰلِدِينَ فِيهَآ أَبَدٗاۖ رَّضِيَ ٱللَّهُ عَنۡهُمۡ وَرَضُواْ عَنۡهُۚ ذَٰلِكَ لِمَنۡ خَشِيَ رَبَّهُۥ"]},{"id":97,"name":"القدر","ayat":["إِنَّآ أَنزَلۡنَٰهُ فِي لَيۡلَةِ ٱلۡقَدۡرِ","وَمَآ أَدۡرَىٰكَ مَا لَيۡلَةُ ٱلۡقَدۡرِ","لَيۡلَةُ ٱلۡقَدۡرِ خَيۡرٞ مِّنۡ أَلۡفِ شَهۡرٖ","تَنَزَّلُ ٱلۡمَلَـٰٓئِكَةُ وَٱلرُّوحُ فِيهَا بِإِذۡنِ رَبِّهِم مِّن كُلِّ أَمۡرٖ","سَلَٰمٌ هِيَ حَتَّىٰ مَطۡلَعِ ٱلۡفَجۡرِ"]},{"id":96,"name":"العلق","ayat":["ٱقۡرَأۡ بِٱسۡمِ رَبِّكَ ٱلَّذِي خَلَقَ","خَلَقَ ٱلۡإِنسَٰنَ مِنۡ عَلَقٍ","ٱقۡرَأۡ وَرَبُّكَ ٱلۡأَكۡرَمُ","ٱلَّذِي عَلَّمَ بِٱلۡقَلَمِ","عَلَّمَ ٱلۡإِنسَٰنَ مَا لَمۡ يَعۡلَمۡ","كَلَّآ إِنَّ ٱلۡإِنسَٰنَ لَيَطۡغَىٰٓ","أَن رَّءَاهُ ٱسۡتَغۡنَىٰٓ","إِنَّ إِلَىٰ رَبِّكَ ٱلرُّجۡعَىٰٓ","أَرَءَيۡتَ ٱلَّذِي يَنۡهَىٰ","عَبۡدًا إِذَا صَلَّىٰٓ","أَرَءَيۡتَ إِن كَانَ عَلَى ٱلۡهُدَىٰٓ","أَوۡ أَمَرَ بِٱلتَّقۡوَىٰٓ","أَرَءَيۡتَ إِن كَذَّبَ وَتَوَلَّىٰٓ","أَلَمۡ يَعۡلَم بِأَنَّ ٱللَّهَ يَرَىٰ","كَلَّا لَئِن لَّمۡ يَنتَهِ لَنَسۡفَعَۢا بِٱلنَّاصِيَةِ","نَاصِيَةٖ كَٰذِبَةٍ خَاطِئَةٖ","فَلۡيَدۡعُ نَادِيَهُۥ","سَنَدۡعُ ٱلزَّبَانِيَةَ","كَلَّا لَا تُطِعۡهُ وَٱسۡجُدۡۤ وَٱقۡتَرِب۩"]},{"id":95,"name":"التين","ayat":["وَٱلتِّينِ وَٱلزَّيۡتُونِ","وَطُورِ سِينِينَ","وَهَٰذَا ٱلۡبَلَدِ ٱلۡأَمِينِ","لَقَدۡ خَلَقۡنَا ٱلۡإِنسَٰنَ فِيٓ أَحۡسَنِ تَقۡوِيمٖ","ثُمَّ رَدَدۡنَٰهُ أَسۡفَلَ سَٰفِلِينَ","إِلَّا ٱلَّذِينَ ءَامَنُواْ وَعَمِلُواْ ٱلصَّـٰلِحَٰتِ فَلَهُمۡ أَجۡرٌ غَيۡرُ مَمۡنُونٖ","فَمَا يُكَذِّبُكَ بَعۡدُ بِٱلدِّينِ","أَلَيۡسَ ٱللَّهُ بِأَحۡكَمِ ٱلۡحَٰكِمِينَ"]},{"id":94,"name":"الشرح","ayat":["أَلَمۡ نَشۡرَحۡ لَكَ صَدۡرَكَ","وَوَضَعۡنَا عَنكَ وِزۡرَكَ","ٱلَّذِيٓ أَنقَضَ ظَهۡرَكَ","وَرَفَعۡنَا لَكَ ذِكۡرَكَ","فَإِنَّ مَعَ ٱلۡعُسۡرِ يُسۡرًا","إِنَّ مَعَ ٱلۡعُسۡرِ يُسۡرٗا","فَإِذَا فَرَغۡتَ فَٱنصَبۡ","وَإِلَىٰ رَبِّكَ فَٱرۡغَب"]},{"id":93,"name":"الضحى","ayat":["وَٱلضُّحَىٰ","وَٱلَّيۡلِ إِذَا سَجَىٰ","مَا وَدَّعَكَ رَبُّكَ وَمَا قَلَىٰ","وَلَلۡأٓخِرَةُ خَيۡرٞ لَّكَ مِنَ ٱلۡأُولَىٰ","وَلَسَوۡفَ يُعۡطِيكَ رَبُّكَ فَتَرۡضَىٰٓ","أَلَمۡ يَجِدۡكَ يَتِيمٗا فَـَٔاوَىٰ","وَوَجَدَكَ ضَآلّٗا فَهَدَىٰ","وَوَجَدَكَ عَآئِلٗا فَأَغۡنَىٰ","فَأَمَّا ٱلۡيَتِيمَ فَلَا تَقۡهَرۡ","وَأَمَّا ٱلسَّآئِلَ فَلَا تَنۡهَرۡ","وَأَمَّا بِنِعۡمَةِ رَبِّكَ فَحَدِّثۡ"]},{"id":1,"name":"الفاتحة","ayat":["بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ","ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَٰلَمِينَ","ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ","مَٰلِكِ يَوۡمِ ٱلدِّينِ","إِيَّاكَ نَعۡبُدُ وَإِيَّاكَ نَسۡتَعِينُ","ٱهۡدِنَا ٱلصِّرَٰطَ ٱلۡمُسۡتَقِيمَ","صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ"]}];
 // Al-Fatiha sits last in the list; every other surah is ordered from An-Nas back to Ad-Duha.
 const CARS=[
- {id:'c1',name:'سيارة الحي',price:0,body:'#E5484D',roof:'#B8323A',stripe:'#FFFFFF',perk:'none'},
- {id:'c2',name:'التاكسي',price:600,body:'#F2C230',roof:'#C99A12',stripe:'#1B2418',perk:'coinrain',rar:'rare'},
- {id:'c3',name:'جيب الصحراء',price:1000,body:'#C9A15A',roof:'#7C5E2E',stripe:'#3B2A14',perk:'magnet',rar:'rare'},
- {id:'c4',name:'سيارة السباق',price:1600,body:'#2E86DE',roof:'#1B4F8A',stripe:'#FFC93C',perk:'nitro',rar:'rare'},
- {id:'c5',name:'سيارة الثلج',price:2200,body:'#BFE6FF',roof:'#3FA7D6',stripe:'#FFFFFF',perk:'slow',rar:'rare'},
- {id:'c6',name:'سيارة الإسعاف',price:2800,body:'#F3F7EE',roof:'#E5484D',stripe:'#E5484D',lights:['#E5484D','#E5484D'],perk:'heal',rar:'epic'},
- {id:'c7',name:'سيارة الشرطة',price:3500,body:'#F3F7EE',roof:'#1B2418',stripe:'#1B2418',lights:['#E5484D','#2E86DE'],perk:'shield',rar:'epic'},
- {id:'c8',name:'سيارة الإطفاء',price:4200,body:'#D9482B',roof:'#9E2A2F',stripe:'#FFC93C',lights:['#FFC93C','#E5484D'],perk:'combo',rar:'epic'},
- {id:'c9',name:'شاحنة الوحش',price:5000,body:'#4FAE32',roof:'#2F7A1E',stripe:'#1B2418',big:1,perk:'heart',rar:'epic'},
- {id:'c10',name:'السيارة الذهبية',gems:60,body:'#FFC93C',roof:'#C98A12',stripe:'#FFFFFF',perk:'gold',rar:'legend'}
+ {id:'c1',style:'sedan',name:'سيارة الحي',price:0,body:'#E5484D',roof:'#B8323A',stripe:'#FFFFFF',perk:'none'},
+ {id:'c2',style:'sedan',name:'التاكسي',price:600,body:'#F2C230',roof:'#C99A12',stripe:'#1B2418',perk:'coinrain',rar:'rare'},
+ {id:'c3',style:'jeep',name:'جيب الصحراء',price:1000,body:'#C9A15A',roof:'#7C5E2E',stripe:'#3B2A14',perk:'magnet',rar:'rare'},
+ {id:'c4',style:'race',name:'سيارة السباق',price:1600,body:'#2E86DE',roof:'#1B4F8A',stripe:'#FFC93C',perk:'nitro',rar:'rare'},
+ {id:'c5',style:'sedan',name:'سيارة الثلج',price:2200,body:'#BFE6FF',roof:'#3FA7D6',stripe:'#FFFFFF',perk:'slow',rar:'rare'},
+ {id:'c6',style:'van',name:'سيارة الإسعاف',price:2800,body:'#F3F7EE',roof:'#E5484D',stripe:'#E5484D',lights:['#E5484D','#E5484D'],perk:'heal',rar:'epic'},
+ {id:'c7',style:'sedan',name:'سيارة الشرطة',price:3500,body:'#F3F7EE',roof:'#1B2418',stripe:'#1B2418',lights:['#E5484D','#2E86DE'],perk:'shield',rar:'epic'},
+ {id:'c8',style:'van',name:'سيارة الإطفاء',price:4200,body:'#D9482B',roof:'#9E2A2F',stripe:'#FFC93C',lights:['#FFC93C','#E5484D'],perk:'combo',rar:'epic'},
+ {id:'c9',style:'monster',name:'شاحنة الوحش',price:5000,body:'#4FAE32',roof:'#2F7A1E',stripe:'#1B2418',big:1,perk:'heart',rar:'epic'},
+ {id:'c10',style:'race',name:'السيارة الذهبية',gems:60,body:'#FFC93C',roof:'#C98A12',stripe:'#FFFFFF',perk:'gold',rar:'legend'}
 ];
 const BLASTERS=[
  {id:'b1',name:'مسدس الماء',price:0,body:'#2E86DE',acc:'#8FD3F4',dark:'#1B4F8A',beam:'#8FD3F4',perk:'none'},
@@ -467,20 +467,61 @@ const findItem=id=>allItems().find(x=>x.i.id===id);
 /* ================= SPRITES ================= */
 const COIN='<svg class="ico" viewBox="0 0 10 10" shape-rendering="crispEdges"><rect x="2" y="0" width="6" height="10" fill="#1B2418"/><rect x="0" y="2" width="10" height="6" fill="#1B2418"/><rect x="1" y="1" width="8" height="8" fill="#1B2418"/><rect x="2" y="1" width="6" height="8" fill="#FFC93C"/><rect x="1" y="2" width="8" height="6" fill="#FFC93C"/><rect x="2" y="7" width="6" height="1" fill="#C98A12"/><rect x="7" y="2" width="1" height="6" fill="#C98A12"/><rect x="4" y="3" width="2" height="4" fill="#FFF0B3"/></svg>';
 const GEM='<svg class="ico" viewBox="0 0 10 10"><polygon points="2,1 8,1 10,4 5,10 0,4" fill="#1B2418"/><polygon points="2.6,1.8 7.4,1.8 8.9,4 5,8.6 1.1,4" fill="#38E0D0"/><polygon points="2.6,1.8 5,1.8 4,4 1.1,4" fill="#E0FFFC"/><polygon points="5,8.6 6.5,4 8.9,4" fill="#167A70"/></svg>';
-function carSVG(c){
-  const big=c.big,ww=big?9:6,wh=big?17:13,lx=big?0:2,rx=44-lx-ww;
-  let s=`<svg viewBox="0 0 44 70" shape-rendering="crispEdges">`+
-  `<rect x="${lx}" y="8" width="${ww}" height="${wh}" fill="#1B2418"/><rect x="${rx}" y="8" width="${ww}" height="${wh}" fill="#1B2418"/>`+
-  `<rect x="${lx}" y="${big?45:47}" width="${ww}" height="${wh}" fill="#1B2418"/><rect x="${rx}" y="${big?45:47}" width="${ww}" height="${wh}" fill="#1B2418"/>`+
-  `<rect x="4" y="1" width="36" height="68" fill="#1B2418"/><rect x="6" y="3" width="32" height="64" fill="${c.body}"/>`+
-  `<rect x="20" y="3" width="4" height="13" fill="${c.stripe}"/><rect x="20" y="54" width="4" height="13" fill="${c.stripe}"/>`+
-  `<rect x="9" y="16" width="26" height="10" fill="#1B2418"/><rect x="10" y="17" width="24" height="8" fill="#9FE3FF"/><rect x="11" y="18" width="7" height="2" fill="#E8FAFF"/>`+
-  `<rect x="9" y="26" width="26" height="19" fill="${c.roof}"/>`+
-  `<rect x="9" y="45" width="26" height="8" fill="#1B2418"/><rect x="10" y="46" width="24" height="6" fill="#9FE3FF"/>`+
-  `<rect x="8" y="3" width="7" height="3" fill="#FFF59D"/><rect x="29" y="3" width="7" height="3" fill="#FFF59D"/>`+
+let svgUid=0;
+// Top-down car for the race track, driver visible from above.
+function carSVG(c,sk){
+  sk=sk||eq('skin');const big=c.style==='monster',ww=big?9:7,wh=big?17:14,lx=big?0:1,rx=44-lx-ww;
+  let s=`<svg viewBox="0 0 44 70">`+
+  `<rect x="${lx}" y="8" width="${ww}" height="${wh}" rx="2" fill="#1B2418"/><rect x="${rx}" y="8" width="${ww}" height="${wh}" rx="2" fill="#1B2418"/>`+
+  `<rect x="${lx}" y="46" width="${ww}" height="${wh}" rx="2" fill="#1B2418"/><rect x="${rx}" y="46" width="${ww}" height="${wh}" rx="2" fill="#1B2418"/>`+
+  `<rect x="5" y="2" width="34" height="66" rx="9" fill="${c.body}" stroke="#1B2418" stroke-width="2.5"/>`+
+  `<rect x="20" y="3" width="4" height="15" fill="${c.stripe}" opacity=".9"/><rect x="20" y="56" width="4" height="11" fill="${c.stripe}" opacity=".9"/>`+
+  `<path d="M10 20 L34 20 L31 28 L13 28 Z" fill="#9FE3FF" stroke="#1B2418" stroke-width="1.5"/>`+
+  `<rect x="11" y="28" width="22" height="19" rx="3" fill="#2B2F38" stroke="#1B2418" stroke-width="1.5"/>`+
+  `<rect x="12" y="36" width="20" height="9" rx="2" fill="${sk.shirt}"/>`+
+  `<rect x="15" y="29" width="14" height="11" rx="2" fill="${sk.type==='astro'?'#FFFFFF':sk.type==='knight'?sk.hair:sk.type==='hat'?sk.hat:sk.type==='pirate'?'#E5484D':sk.hair}" stroke="#1B2418" stroke-width="1"/>`+
+  `<rect x="13" y="47" width="18" height="7" rx="2" fill="#9FE3FF" stroke="#1B2418" stroke-width="1.5"/>`+
+  `<rect x="8" y="3" width="7" height="4" rx="1" fill="#FFF59D"/><rect x="29" y="3" width="7" height="4" rx="1" fill="#FFF59D"/>`+
   `<rect x="8" y="64" width="7" height="3" fill="#E5484D"/><rect x="29" y="64" width="7" height="3" fill="#E5484D"/>`;
-  if(c.lights)s+=`<rect x="10" y="32" width="12" height="6" fill="${c.lights[0]}"/><rect x="22" y="32" width="12" height="6" fill="${c.lights[1]}"/>`;
-  if(c.perk==='coinrain')s+=`<rect x="16" y="30" width="12" height="5" fill="#1B2418"/><rect x="17" y="31" width="10" height="3" fill="#FFF59D"/>`;
+  if(c.lights)s+=`<rect x="11" y="55" width="11" height="5" rx="1" fill="${c.lights[0]}" stroke="#1B2418"/><rect x="22" y="55" width="11" height="5" rx="1" fill="${c.lights[1]}" stroke="#1B2418"/>`;
+  return s+'</svg>';
+}
+// Side view car; with a skin the hero sits at the wheel, without one the cabin is empty.
+function carSide(c,sk){
+  const st=c.style||'sedan',big=st==='monster',lift=big?10:0,wr=big?16:12,by=34-lift,id='cs'+(svgUid++);
+  const K='stroke="#1B2418" stroke-width="3" stroke-linejoin="round"';
+  let cab,win,roofY,head;
+  if(st==='race'){cab=`40,${by} 52,${by-15} 84,${by-15} 98,${by}`;win=`47,${by-2} 55,${by-12.5} 82,${by-12.5} 91,${by-2}`;roofY=by-15;head=[67,by-12,13]}
+  else if(st==='jeep'||st==='monster'){cab=`30,${by} 33,${by-19} 90,${by-19} 97,${by}`;win=`37,${by-3} 38,${by-16} 87,${by-16} 92,${by-3}`;roofY=by-19;head=[69,by-16,16]}
+  else if(st==='van'){cab=`12,${by} 14,${by-24} 98,${by-24} 116,${by}`;win=`88,${by-3} 92,${by-20} 98,${by-20} 112,${by-3}`;roofY=by-24;head=[93,by-20,16]}
+  else{cab=`34,${by} 46,${by-21} 86,${by-21} 101,${by}`;win=`40,${by-2} 50,${by-18} 84,${by-18} 95,${by-2}`;roofY=by-21;head=[68,by-18,16]}
+  let s=`<svg viewBox="0 0 128 72"><defs><clipPath id="${id}"><polygon points="${win}"/></clipPath></defs>`+
+  `<ellipse cx="64" cy="68" rx="58" ry="3.5" fill="rgba(0,0,0,.18)"/>`;
+  if(big)s+=`<rect x="40" y="${by+18}" width="48" height="8" fill="#454B54" ${K}/>`;
+  if(st==='race')s+=`<path d="M8 ${by-1} L8 ${by-9} L24 ${by-9} L24 ${by-5} L16 ${by-5} L16 ${by-1}" fill="${c.roof}" ${K}/>`;
+  if(st==='fire'||c.perk==='combo')s+=`<g><rect x="22" y="${roofY-7}" width="72" height="5" fill="#C9D1D9" ${K}/>${[30,42,54,66,78].map(x=>`<rect x="${x}" y="${roofY-7}" width="2.5" height="5" fill="#1B2418"/>`).join('')}</g>`;
+  s+=`<polygon points="${cab}" fill="${c.roof}" ${K}/>`+
+  `<polygon points="${win}" fill="${sk?'#DCEFFA':'#9FE3FF'}"/>`;
+  if(sk){const hs=head[2]/8;s+=`<g clip-path="url(#${id})">${headRects(sk,hs,head[0],head[1])}<rect x="${head[0]-2}" y="${head[1]+head[2]}" width="${head[2]+4}" height="10" fill="${sk.shirt}"/></g>`}
+  s+=`<polygon points="${win}" fill="#9FE3FF" opacity="${sk?.18:.9}" stroke="#1B2418" stroke-width="2"/>`+
+  `<polygon points="${win}" fill="none"/>`;
+  if(st!=='van'&&st!=='race')s+=`<rect x="${(st==='jeep'||big)?62:64}" y="${roofY+1}" width="3" height="${by-roofY-1}" fill="${c.roof}"/>`;
+  if(st==='van')s+=`<rect x="22" y="${by-19}" width="18" height="12" rx="2" fill="#9FE3FF" stroke="#1B2418" stroke-width="2"/><rect x="46" y="${by-19}" width="18" height="12" rx="2" fill="#9FE3FF" stroke="#1B2418" stroke-width="2"/>`;
+  s+=`<rect x="6" y="${by}" width="116" height="22" rx="8" fill="${c.body}" ${K}/>`+
+  `<rect x="9" y="${by+3}" width="110" height="3" rx="1.5" fill="rgba(255,255,255,.35)"/>`;
+  if(c.stripe!==c.body)s+=`<rect x="8" y="${by+10}" width="112" height="4" fill="${c.stripe}"/>`;
+  s+=`<line x1="66" y1="${by+1}" x2="66" y2="${by+19}" stroke="#1B2418" stroke-width="1.5" opacity=".5"/><rect x="70" y="${by+6}" width="7" height="2.5" rx="1" fill="#1B2418" opacity=".6"/>`+
+  `<rect x="113" y="${by+4}" width="8" height="6" rx="2" fill="#FFF59D" stroke="#1B2418" stroke-width="1.5"/>`+
+  `<rect x="7" y="${by+4}" width="6" height="6" rx="1" fill="#E5484D" stroke="#1B2418" stroke-width="1.5"/>`+
+  `<rect x="112" y="${by+15}" width="12" height="5" rx="2" fill="#9AA3AD" stroke="#1B2418" stroke-width="1.5"/><rect x="4" y="${by+15}" width="10" height="5" rx="2" fill="#9AA3AD" stroke="#1B2418" stroke-width="1.5"/>`;
+  if(c.lights){const lx=st==='van'?56:58;s+=`<rect x="${lx}" y="${roofY-6}" width="9" height="6" rx="1.5" fill="${c.lights[0]}" stroke="#1B2418" stroke-width="1.5"/><rect x="${lx+9}" y="${roofY-6}" width="9" height="6" rx="1.5" fill="${c.lights[1]}" stroke="#1B2418" stroke-width="1.5"/>`}
+  if(c.perk==='heal')s+=`<rect x="30" y="${by+3}" width="16" height="5" fill="#E5484D"/><rect x="35.5" y="${by-2.5}" width="5" height="16" fill="#E5484D"/>`;
+  if(c.perk==='shield'&&c.lights)s+=`<rect x="20" y="${by+9}" width="30" height="6" fill="#2462B8"/>`;
+  if(c.perk==='coinrain')s+=`<rect x="58" y="${roofY-7}" width="16" height="7" rx="1.5" fill="#FFF59D" stroke="#1B2418" stroke-width="1.5"/><rect x="61" y="${roofY-5}" width="3" height="3" fill="#1B2418"/><rect x="67" y="${roofY-5}" width="3" height="3" fill="#1B2418"/>`;
+  if(st==='jeep')s+=`<circle cx="5" cy="${by+6}" r="7" fill="#1B2418"/><circle cx="5" cy="${by+6}" r="3" fill="#9AA3AD"/>`;
+  if(c.perk==='slow')s+=`<g stroke="#FFFFFF" stroke-width="2"><line x1="88" y1="${by+3}" x2="88" y2="${by+13}"/><line x1="83" y1="${by+8}" x2="93" y2="${by+8}"/><line x1="84.5" y1="${by+4.5}" x2="91.5" y2="${by+11.5}"/><line x1="91.5" y1="${by+4.5}" x2="84.5" y2="${by+11.5}"/></g>`;
+  if(c.perk==='gold')s+=`<g fill="#FFFFFF"><polygon points="24,${by+4} 26,${by+9} 31,${by+11} 26,${by+13} 24,${by+18} 22,${by+13} 17,${by+11} 22,${by+9}"/><polygon points="100,${by-6} 101,${by-3} 104,${by-2} 101,${by-1} 100,${by+2} 99,${by-1} 96,${by-2} 99,${by-3}"/></g>`;
+  for(const wx of [32,96]){const cy=by+20;s+=`<circle cx="${wx}" cy="${cy}" r="${wr+3.5}" fill="#1B2418"/><circle cx="${wx}" cy="${cy}" r="${wr}" fill="#2B2F38" stroke="#1B2418" stroke-width="2"/><circle cx="${wx}" cy="${cy}" r="${wr*.55}" fill="${c.perk==='gold'?'#FFC93C':'#C9D1D9'}" stroke="#1B2418" stroke-width="2"/><circle cx="${wx}" cy="${cy}" r="2.2" fill="#1B2418"/>`}
   return s+'</svg>';
 }
 function blasterSVG(b){
@@ -492,20 +533,36 @@ function blasterSVG(b){
   `<rect x="47" y="11" width="13" height="7" fill="${b.acc}" ${k}/><rect x="59" y="9" width="5" height="11" fill="${b.dark}" ${k}/>`+
   `<rect x="14" y="14" width="3" height="3" fill="${b.acc}"/><rect x="19" y="14" width="3" height="3" fill="${b.acc}"/></svg>`;
 }
-function skinSVG(s){
-  const P=[];const r=(x,y,w,h,c)=>P.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`);
+function headRects(s,k,ox,oy){
+  const P=[];const r=(x,y,w,h,c)=>P.push(`<rect x="${ox+x*k}" y="${oy+y*k}" width="${w*k+.15}" height="${h*k+.15}" fill="${c}"/>`);
   r(0,0,8,8,s.skin);r(0,0,8,2,s.hair);r(0,2,1,2,s.hair);r(7,2,1,2,s.hair);
   r(1,4,1,1,'#fff');r(2,4,1,1,'#1B2418');r(5,4,1,1,'#1B2418');r(6,4,1,1,'#fff');r(3,6,2,1,'#8C4A3A');
   if(s.type==='ninja'){r(0,0,8,4,s.hair);r(0,5,8,3,s.hair);r(1,3,6,1,'#E5484D')}
   if(s.type==='astro'){r(0,0,8,1,'#fff');r(0,0,1,8,'#fff');r(7,0,1,8,'#fff');r(0,7,8,1,'#fff');r(1,1,6,6,'rgba(120,200,255,.35)');r(1,1,2,1,'rgba(255,255,255,.8)')}
   if(s.type==='knight'){r(0,0,8,8,s.hair);r(1,4,6,1,'#1B2418');r(2,4,1,1,'#fff');r(5,4,1,1,'#fff');r(3,0,2,8,'rgba(0,0,0,.15)');r(3,0,2,1,'#E5484D')}
-  if(s.type==='hat'){r(0,0,8,2,s.hat);r(-0,2,8,1,s.hat);r(1,0,6,1,'rgba(255,255,255,.3)')}
+  if(s.type==='hat'){r(0,0,8,3,s.hat);r(1,0,6,1,'rgba(255,255,255,.3)')}
   if(s.type==='goggles'){r(1,3,6,2,'#1B2418');r(1,4,2,1,'#9FE3FF');r(5,4,2,1,'#9FE3FF')}
-  if(s.type==='pirate'){r(0,0,8,2,'#E5484D');r(0,1,8,1,'#B8323A');r(5,3,2,2,'#1B2418');r(0,3,8,1,'rgba(0,0,0,.0)')}
-  r(0,8,8,3,s.shirt);r(0,8,8,1,'rgba(0,0,0,.2)');r(3,9,2,2,'rgba(255,255,255,.25)');
-  return `<svg viewBox="0 0 8 11" shape-rendering="crispEdges">${P.join('')}</svg>`;
+  if(s.type==='pirate'){r(0,0,8,2,'#E5484D');r(0,1,8,1,'#B8323A');r(5,3,2,2,'#1B2418')}
+  return P.join('');
 }
-const itemSVG=(cat,i)=>cat==='car'?carSVG(i):cat==='blaster'?blasterSVG(i):skinSVG(i);
+function skinSVG(s){
+  return `<svg viewBox="0 0 8 11" shape-rendering="crispEdges">${headRects(s,1,0,0)}<rect x="0" y="8" width="8" height="3" fill="${s.shirt}"/><rect x="0" y="8" width="8" height="1" fill="rgba(0,0,0,.2)"/><rect x="3" y="9" width="2" height="2" fill="rgba(255,255,255,.25)"/></svg>`;
+}
+// Full-body blocky hero holding the blaster.
+function heroFull(s,b){
+  const pants=s.type==='ninja'?'#1B2418':s.type==='astro'?'#F3F7EE':s.type==='knight'?'#9AA3AD':'#2B4C7E';
+  const sleeve=s.type==='knight'?'#9AA3AD':s.shirt,shoe=s.type==='astro'?'#9AA3AD':'#3B2A14';
+  const R=(x,y,w,h,c)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>`,O=(x,y,w,h)=>`<rect x="${x-1}" y="${y-1}" width="${w+2}" height="${h+2}" fill="#1B2418"/>`;
+  let g=`<svg viewBox="0 0 74 58" shape-rendering="crispEdges">`;
+  g+=O(4,17,4,16)+R(4,17,4,13,sleeve)+R(4,30,4,3,s.skin);                 // back arm
+  g+=O(9,35,6,16)+O(17,35,6,16)+R(9,35,6,14,pants)+R(17,35,6,14,pants)+R(9,49,7,3,shoe)+R(17,49,8,3,shoe); // legs
+  g+=O(8,17,16,19)+R(8,17,16,19,s.shirt)+R(8,17,16,2,'rgba(0,0,0,.18)')+R(8,32,16,2,s.type==='ninja'?'#E5484D':'#1B2418')+R(14,20,4,4,'rgba(255,255,255,.25)'); // torso
+  g+=`<g>${`<rect x="7" y="0" width="18" height="18" fill="#1B2418"/>`}${headRects(s,2,8,1)}</g>`;   // head
+  if(b)g+=blasterSVG(b).replace('<svg ','<svg x="27" y="11" width="44" height="23" ');
+  g+=O(22,21,12,5)+R(22,21,10,5,sleeve)+R(31,21,4,5,s.skin);              // front arm holding the grip
+  return g+'</svg>';
+}
+const itemSVG=(cat,i)=>cat==='car'?carSide(i,eq('skin')):cat==='blaster'?blasterSVG(i):heroFull(i,eq('blaster'));
 
 /* ================= SOUND FX ================= */
 let AC=null;
@@ -618,10 +675,9 @@ function renderHome(){
   scr.innerHTML=`
   <button class="stage" data-act="go" data-to="shop" data-tab="car" aria-label="كراج البطل">
     <span class="tag">كراج ${esc(S.name)}</span>
-    <div class="car">${carSVG(eq('car'))}</div>
+    <div class="car">${carSide(eq('car'),null)}</div>
     ${pet?`<div class="pet bob" style="animation-delay:-.6s">${pet.e}</div>`:''}
-    <div class="hero bob">${skinSVG(eq('skin'))}</div>
-    <div class="gun bob" style="animation-delay:-1.2s">${blasterSVG(eq('blaster'))}</div>
+    <div class="hero bob">${heroFull(eq('skin'),eq('blaster'))}</div>
   </button>
   ${dailyOk?`<button class="btn daily" data-act="daily"><span class="chest">🎁</span><span>صندوق اليوم المجاني!<small>افتحه كل يوم وخلّي السلسلة تكبر</small></span></button>`:''}
   <div class="worlds">

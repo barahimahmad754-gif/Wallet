@@ -426,12 +426,13 @@ const QAUDIO_REMOTE='https://everyayah.com/data/Minshawy_Teacher_128kbps/';
 
 /* ================= STATE ================= */
 const KEY='harf-heroes-v2';
-function defState(){return{name:'البطل',coins:150,gems:5,xp:0,lvl:1,letters:{},boss:{},qp:{},seen:{},owned:['c1','b1','s1'],equip:{car:'c1',blaster:'b1',skin:'s1',pet:''},pets:[],stickers:{},setsDone:{},inv:{shield:1,slow:1,hint:1,x2:0},upg:{coin:0,heart:0,power:0},daily:{last:'',streak:0},play:{date:'',sec:0,extra:0},settings:{limit:20,sound:true,voice:true},boxes:0}}
+function defState(){return{name:'حمودي',coins:150,gems:5,xp:0,lvl:1,letters:{},boss:{},qp:{},seen:{},owned:['c1','b1','s1'],equip:{car:'c1',blaster:'b1',skin:'s1',pet:''},pets:[],stickers:{},setsDone:{},inv:{shield:1,slow:1,hint:1,x2:0},upg:{coin:0,heart:0,power:0},daily:{last:'',streak:0},play:{date:'',sec:0,extra:0},settings:{limit:20,sound:true,voice:true},boxes:0}}
 function load(){
   const d=defState();
   try{if(!localStorage.getItem(KEY)){const v1=JSON.parse(localStorage.getItem('harf-heroes-v1')||'null');if(v1){['name','coins','gems','xp','lvl','letters','boss','daily'].forEach(k=>{if(v1[k]!==undefined)d[k]=v1[k]});if(v1.settings)Object.assign(d.settings,v1.settings);localStorage.setItem(KEY,JSON.stringify(d))}}}catch(e){}
   try{const raw=localStorage.getItem(KEY);if(raw){const o=JSON.parse(raw);
     for(const k in d){if(o[k]!==undefined){d[k]=(d[k]&&typeof d[k]==='object'&&!Array.isArray(d[k]))?Object.assign(d[k],o[k]):o[k]}}}}catch(e){}
+  if(d.name==='البطل')d.name='حمودي';
   return d;
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -533,9 +534,9 @@ const CUSTOM={};
 const CLIP_GROUPS=[
  {id:'W',name:'أسماء الصور',items:LETTERS.map((L,i)=>({k:'W'+i,t:L[2],e:L[3]}))},
  {id:'G',name:'شرح الألعاب',items:GAMES.map(g=>({k:'G_'+g.id,t:g.how,e:g.icon}))},
- {id:'P',name:'تشجيع وتعليمات',items:[{k:'P1',t:'أحسنت!',e:'👏'},{k:'P2',t:'ممتاز يا بطل!',e:'🌟'},{k:'P3',t:'رهيب! كمّل!',e:'🔥'},{k:'P_try',t:'ولا يهمك، جرّب مرة ثانية',e:'💪'},{k:'P_win',t:'كفو! خلّصت المرحلة',e:'🏆'},{k:'P_learn',t:'اضغط على الحرف واسمعه',e:'👆'},{k:'P_quran',t:'اسمع المعلّم وردّد مع الأطفال',e:'📖'},{k:'P_box',t:'وش بيطلع لك؟ افتح الصندوق!',e:'🎁'}]}
+ {id:'P',name:'تشجيع وتعليمات',items:[{k:'P1',t:'أحسنت!',e:'👏'},{k:'P2',t:'ممتاز يا بطل!',e:'🌟'},{k:'P3',t:'رهيب! كمّل!',e:'🔥'},{k:'P4',t:'كفو!',e:'💯'},{k:'P_try',t:'ولا يهمك، جرّب مرة ثانية',e:'💪'},{k:'P_win',t:'كفو! خلّصت المرحلة',e:'🏆'},{k:'P_learn',t:'اضغط على الحرف واسمعه',e:'👆'},{k:'P_quran',t:'اسمع المعلّم وردّد مع الأطفال',e:'📖'},{k:'P_box',t:'وش بيطلع لك؟ افتح الصندوق!',e:'🎁'}]}
 ];
-const VCLIPS=[/*@@VCLIPS@@*/];
+const VCLIPS=["G_listen", "G_memory", "G_pick", "G_race", "G_shoot", "G_simon", "G_whack", "P1", "P2", "P3", "P4", "P_box", "P_learn", "P_quran", "P_try", "P_win", "W0", "W1", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "W18", "W19", "W2", "W20", "W21", "W22", "W23", "W24", "W25", "W26", "W27", "W3", "W4", "W5", "W6", "W7", "W8", "W9"];
 const lcache={};let voiceEl=null;
 function playLetter(i){
   if(!S.settings.voice)return;
@@ -547,7 +548,7 @@ function playClip(k,delay=0){
   if(delay)setTimeout(go_,delay);else go_();return true;
 }
 let lastPraise=0;
-function praise(){if(Date.now()-lastPraise<5000||Math.random()>.35)return;lastPraise=Date.now();playClip(['P1','P2','P3'][rnd(3)],350)}
+function praise(){if(Date.now()-lastPraise<5000||Math.random()>.35)return;lastPraise=Date.now();playClip(['P1','P2','P3','P4'][rnd(4)],350)}
 // Quran: teacher recites, children repeat after him.
 let qAudio=null,audioWarned=false;
 function playAyah(sid,n,onend){

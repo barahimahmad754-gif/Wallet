@@ -180,6 +180,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 .tgt::before{content:"";position:absolute;top:-14px;left:50%;width:6px;height:11px;margin-left:-3px;background:var(--ink)}
 .tgt::after{content:"";position:absolute;top:-18px;left:50%;width:56px;height:6px;margin-left:-28px;background:var(--stone);border:2px solid var(--ink);border-radius:3px;animation:prop .25s linear infinite}
 @keyframes prop{50%{transform:scaleX(.3)}}
+.fm{font-size:.72em;white-space:nowrap;letter-spacing:0}
 .tgt.bad,.bad{animation:shake .35s}
 @keyframes shake{20%{translate:-8px 0}40%{translate:8px 0}60%{translate:-6px 0}80%{translate:6px 0}}
 .hintglow{outline:4px solid var(--gold);outline-offset:3px;animation:glowp .6s ease-in-out infinite}
@@ -238,6 +239,15 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 .pcard .e{font-size:clamp(40px,13vw,64px);line-height:1.1}
 .pcard .w{font-family:var(--f-letter);font-size:22px;line-height:1.4}
 .pcard.ok{background:#CFF3C1}
+.wtiles{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;direction:rtl}
+.wtile{font-family:var(--f-letter);font-size:clamp(30px,10vw,46px);line-height:1.5;min-width:58px;padding:0 8px 6px;color:var(--ink);background:#fff;border:3px solid var(--ink);border-radius:8px;box-shadow:0 4px 0 var(--ink);white-space:nowrap}
+.wtile.ok{background:var(--grass);color:#fff}
+.posrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-width:420px}
+.poscard{background:var(--paper);border:3px solid var(--ink);border-radius:10px;box-shadow:0 4px 0 var(--ink);padding:4px 2px;display:flex;flex-direction:column;align-items:center;min-width:0}
+.poscard small{font-weight:800;font-size:12px;color:var(--stone-d)}
+.poscard .e{font-size:30px;line-height:1.2}
+.poscard .w{font-family:var(--f-letter);font-size:24px;line-height:1.6}
+.poscard .hl,.wordcard .hl{color:var(--red)}
 .stat{font-family:var(--f-display);color:#fff;text-shadow:0 2px 0 var(--ink);font-size:22px;text-align:center}
 .seqdots{display:flex;gap:6px;justify-content:center}
 .seqdots i{width:16px;height:16px;border:2px solid var(--ink);border-radius:3px;background:#fff}
@@ -364,11 +374,33 @@ const GAMES=[
  {id:'shoot',name:'اصطد الحرف',icon:'🎯',from:0,how:'الصناديق الطايرة عليها حروف. اضغط على الحرف المطلوب بس!'},
  {id:'race',name:'سباق الحروف',icon:'🏁',from:0,how:'اضغط على المسار عشان تدخل بوابة الحرف الصح.'},
  {id:'listen',name:'اسمع واختر',icon:'👂',from:4,how:'ما تشوف الحرف! اسمعه بس واختاره.'},
+ {id:'find',name:'وين الحرف؟',icon:'🔍',from:4,how:'شوف الكلمة، ولاقِ الحرف المطلوب فيها: في أولها أو وسطها أو آخرها.'},
  {id:'memory',name:'لعبة الذاكرة',icon:'🧠',from:8,how:'اقلب بطاقتين: الحرف وصورته. تذكّر مكانها!'},
  {id:'whack',name:'اضرب الحرف',icon:'🔨',from:12,how:'الحروف تطلع من الحفر بسرعة. اضرب المطلوب قبل ما ينزل!'},
  {id:'pick',name:'أي صورة؟',icon:'🖼️',from:16,how:'اختر الصورة اللي اسمها يبدأ بالحرف.'},
  {id:'simon',name:'تذكّر الترتيب',icon:'🔁',from:20,how:'شوف الحروف وهي تضوي بالترتيب، وبعدين اضغطها بنفس الترتيب.'}
 ];
+// More picture words, so every letter shows up at the start, middle and end of words.
+const WORDS=[['أسد','🦁'],['كلب','🐶'],['قلم','✏️'],['باب','🚪'],['شجرة','🌳'],['سيارة','🚗'],['كتاب','📖'],['نجمة','⭐'],['قمر','🌙'],['بحر','🌊'],['جبل','⛰️'],['ثلج','❄️'],['خبز','🍞'],['حليب','🥛'],['بيض','🥚'],['عين','👁️'],['أذن','👂'],['أنف','👃'],['قلب','❤️'],['مفتاح','🔑'],['ساعة','⌚'],['هاتف','📱'],['طبل','🥁'],['مطر','🌧️'],['نار','🔥'],['زهرة','🌼'],['فراشة','🦋'],['دجاجة','🐔'],['حوت','🐋'],['نمر','🐯'],['فأر','🐭'],['ديك','🐓'],['بقرة','🐄'],['صقر','🦅'],['مسجد','🕌'],['كعكة','🍰'],['جزر','🥕'],['بصل','🧅'],['ثوم','🧄'],['عسل','🍯'],['ملعقة','🥄'],['مظلة','☂️'],['نظارة','👓'],['حذاء','👟'],['تاج','👑'],['كأس','🏆'],['سفينة','🚢'],['قطار','🚂'],['دراجة','🚲'],['خيمة','⛺'],['ضوء','💡'],['بطريق','🐧'],['قرد','🐵'],['سلحفاة','🐢'],['ثعبان','🐍'],['عصفور','🐦'],['ذئب','🐺'],['طاووس','🦚'],['بيت','🏠'],['بطيخ','🍉'],['رز','🍚'],['ورق','🍃'],['حقيبة','🎒'],['أرض','🌍'],['بعوضة','🦟'],['ببغاء','🦜'],['دماغ','🧠'],['وجه','🙂'],['بركان','🌋'],['كرسي','🪑'],['مثلث','🔺'],['نخلة','🌴'],['ريش','🪶'],['مقص','✂️'],['ظفر','💅'],['حصان','🐴'],['شمس','☀️'],['قط','🐈'],['وردة','🌹'],['بابا','👨'],['ماما','👩'],['تلميذ','🧑‍🎓'],['دلو','🪣']];
+const RIGHT_ONLY='اأإآدذرزوؤة',NON_JOIN='ء';
+const joinsNext=c=>!RIGHT_ONLY.includes(c)&&!NON_JOIN.includes(c);
+const baseOf=c=>'أإآ'.includes(c)?'ا':c==='ؤ'?'و':c==='ئ'?'ي':c;
+// Each character of a word in the shape it really takes there: alone, start, middle or end.
+function wordForms(w){const ch=[...w];return ch.map((c,k)=>{const p=k>0&&joinsNext(ch[k-1]),n=k<ch.length-1&&joinsNext(c);
+  const pos=p&&n?'med':n?'ini':p?'fin':'iso';return{c,pos,txt:(p?'ـ':'')+c+(n?'ـ':'')}})}
+function letterForm(l,pos){const c=LETTERS[l][0];const dual=joinsNext(c);
+  if(pos==='ini')return dual?c+'ـ':c;if(pos==='med')return dual?'ـ'+c+'ـ':'ـ'+c;if(pos==='fin')return 'ـ'+c;return c}
+// As the child grows, letters show up more often in their start/middle/end shapes.
+function glyph(l,d){const pMix=clamp((d-.1)*1.6,0,.8);const pos=Math.random()<pMix?['ini','med','fin'][rnd(3)]:'iso';const t=letterForm(l,pos);return t.length>1?`<span class="fm">${t}</span>`:t}
+function wordsWith(l){const c=LETTERS[l][0];const all=[...WORDS,...LETTERS.map(L=>[L[2],L[3]])];const seen={};
+  return all.filter(([w])=>{if(seen[w])return false;seen[w]=1;return [...w].some(x=>baseOf(x)===c)})}
+// where the letter sits in the word: first, middle or last (its shape there comes from wordForms)
+function posIn(w,l){const c=LETTERS[l][0],F=wordForms(w);return F.map((f,k)=>baseOf(f.c)===c?(k===0?'ini':k===F.length-1?'fin':'med'):null).filter(Boolean)}
+function shapeAt(w,l,place){const c=LETTERS[l][0],F=wordForms(w);const k=F.findIndex((f,k)=>baseOf(f.c)===c&&(k===0?'ini':k===F.length-1?'fin':'med')===place);return k>=0?F[k].txt:LETTERS[l][0]}
+// Word HTML with the letter coloured in place, joins kept with zero-width joiners.
+function hlWord(w,l){const c=LETTERS[l][0],ch=[...w],Z='‍';return ch.map((x,k)=>{if(baseOf(x)!==c)return x;
+  const p=k>0&&joinsNext(ch[k-1]),n=k<ch.length-1&&joinsNext(x);return `<span class="hl">${p?Z:''}${x}${n?Z:''}</span>${n?Z:''}`}).join('')}
+
 const SURAHS=[{"id":114,"name":"الناس","ayat":["قُلۡ أَعُوذُ بِرَبِّ ٱلنَّاسِ","مَلِكِ ٱلنَّاسِ","إِلَٰهِ ٱلنَّاسِ","مِن شَرِّ ٱلۡوَسۡوَاسِ ٱلۡخَنَّاسِ","ٱلَّذِي يُوَسۡوِسُ فِي صُدُورِ ٱلنَّاسِ","مِنَ ٱلۡجِنَّةِ وَٱلنَّاسِ"]},{"id":113,"name":"الفلق","ayat":["قُلۡ أَعُوذُ بِرَبِّ ٱلۡفَلَقِ","مِن شَرِّ مَا خَلَقَ","وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ","وَمِن شَرِّ ٱلنَّفَّـٰثَٰتِ فِي ٱلۡعُقَدِ","وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ"]},{"id":112,"name":"الإخلاص","ayat":["قُلۡ هُوَ ٱللَّهُ أَحَدٌ","ٱللَّهُ ٱلصَّمَدُ","لَمۡ يَلِدۡ وَلَمۡ يُولَدۡ","وَلَمۡ يَكُن لَّهُۥ كُفُوًا أَحَدُۢ"]},{"id":111,"name":"المسد","ayat":["تَبَّتۡ يَدَآ أَبِي لَهَبٖ وَتَبَّ","مَآ أَغۡنَىٰ عَنۡهُ مَالُهُۥ وَمَا كَسَبَ","سَيَصۡلَىٰ نَارٗا ذَاتَ لَهَبٖ","وَٱمۡرَأَتُهُۥ حَمَّالَةَ ٱلۡحَطَبِ","فِي جِيدِهَا حَبۡلٞ مِّن مَّسَدِۭ"]},{"id":110,"name":"النصر","ayat":["إِذَا جَآءَ نَصۡرُ ٱللَّهِ وَٱلۡفَتۡحُ","وَرَأَيۡتَ ٱلنَّاسَ يَدۡخُلُونَ فِي دِينِ ٱللَّهِ أَفۡوَاجٗا","فَسَبِّحۡ بِحَمۡدِ رَبِّكَ وَٱسۡتَغۡفِرۡهُۚ إِنَّهُۥ كَانَ تَوَّابَۢا"]},{"id":109,"name":"الكافرون","ayat":["قُلۡ يَـٰٓأَيُّهَا ٱلۡكَٰفِرُونَ","لَآ أَعۡبُدُ مَا تَعۡبُدُونَ","وَلَآ أَنتُمۡ عَٰبِدُونَ مَآ أَعۡبُدُ","وَلَآ أَنَا۠ عَابِدٞ مَّا عَبَدتُّمۡ","وَلَآ أَنتُمۡ عَٰبِدُونَ مَآ أَعۡبُدُ","لَكُمۡ دِينُكُمۡ وَلِيَ دِينِ"]},{"id":108,"name":"الكوثر","ayat":["إِنَّآ أَعۡطَيۡنَٰكَ ٱلۡكَوۡثَرَ","فَصَلِّ لِرَبِّكَ وَٱنۡحَرۡ","إِنَّ شَانِئَكَ هُوَ ٱلۡأَبۡتَرُ"]},{"id":107,"name":"الماعون","ayat":["أَرَءَيۡتَ ٱلَّذِي يُكَذِّبُ بِٱلدِّينِ","فَذَٰلِكَ ٱلَّذِي يَدُعُّ ٱلۡيَتِيمَ","وَلَا يَحُضُّ عَلَىٰ طَعَامِ ٱلۡمِسۡكِينِ","فَوَيۡلٞ لِّلۡمُصَلِّينَ","ٱلَّذِينَ هُمۡ عَن صَلَاتِهِمۡ سَاهُونَ","ٱلَّذِينَ هُمۡ يُرَآءُونَ","وَيَمۡنَعُونَ ٱلۡمَاعُونَ"]},{"id":106,"name":"قريش","ayat":["لِإِيلَٰفِ قُرَيۡشٍ","إِۦلَٰفِهِمۡ رِحۡلَةَ ٱلشِّتَآءِ وَٱلصَّيۡفِ","فَلۡيَعۡبُدُواْ رَبَّ هَٰذَا ٱلۡبَيۡتِ","ٱلَّذِيٓ أَطۡعَمَهُم مِّن جُوعٖ وَءَامَنَهُم مِّنۡ خَوۡفِۭ"]},{"id":105,"name":"الفيل","ayat":["أَلَمۡ تَرَ كَيۡفَ فَعَلَ رَبُّكَ بِأَصۡحَٰبِ ٱلۡفِيلِ","أَلَمۡ يَجۡعَلۡ كَيۡدَهُمۡ فِي تَضۡلِيلٖ","وَأَرۡسَلَ عَلَيۡهِمۡ طَيۡرًا أَبَابِيلَ","تَرۡمِيهِم بِحِجَارَةٖ مِّن سِجِّيلٖ","فَجَعَلَهُمۡ كَعَصۡفٖ مَّأۡكُولِۭ"]},{"id":104,"name":"الهمزة","ayat":["وَيۡلٞ لِّكُلِّ هُمَزَةٖ لُّمَزَةٍ","ٱلَّذِي جَمَعَ مَالٗا وَعَدَّدَهُۥ","يَحۡسَبُ أَنَّ مَالَهُۥٓ أَخۡلَدَهُۥ","كَلَّاۖ لَيُنۢبَذَنَّ فِي ٱلۡحُطَمَةِ","وَمَآ أَدۡرَىٰكَ مَا ٱلۡحُطَمَةُ","نَارُ ٱللَّهِ ٱلۡمُوقَدَةُ","ٱلَّتِي تَطَّلِعُ عَلَى ٱلۡأَفۡـِٔدَةِ","إِنَّهَا عَلَيۡهِم مُّؤۡصَدَةٞ","فِي عَمَدٖ مُّمَدَّدَةِۭ"]},{"id":103,"name":"العصر","ayat":["وَٱلۡعَصۡرِ","إِنَّ ٱلۡإِنسَٰنَ لَفِي خُسۡرٍ","إِلَّا ٱلَّذِينَ ءَامَنُواْ وَعَمِلُواْ ٱلصَّـٰلِحَٰتِ وَتَوَاصَوۡاْ بِٱلۡحَقِّ وَتَوَاصَوۡاْ بِٱلصَّبۡرِ"]},{"id":102,"name":"التكاثر","ayat":["أَلۡهَىٰكُمُ ٱلتَّكَاثُرُ","حَتَّىٰ زُرۡتُمُ ٱلۡمَقَابِرَ","كَلَّا سَوۡفَ تَعۡلَمُونَ","ثُمَّ كَلَّا سَوۡفَ تَعۡلَمُونَ","كَلَّا لَوۡ تَعۡلَمُونَ عِلۡمَ ٱلۡيَقِينِ","لَتَرَوُنَّ ٱلۡجَحِيمَ","ثُمَّ لَتَرَوُنَّهَا عَيۡنَ ٱلۡيَقِينِ","ثُمَّ لَتُسۡـَٔلُنَّ يَوۡمَئِذٍ عَنِ ٱلنَّعِيمِ"]},{"id":101,"name":"القارعة","ayat":["ٱلۡقَارِعَةُ","مَا ٱلۡقَارِعَةُ","وَمَآ أَدۡرَىٰكَ مَا ٱلۡقَارِعَةُ","يَوۡمَ يَكُونُ ٱلنَّاسُ كَٱلۡفَرَاشِ ٱلۡمَبۡثُوثِ","وَتَكُونُ ٱلۡجِبَالُ كَٱلۡعِهۡنِ ٱلۡمَنفُوشِ","فَأَمَّا مَن ثَقُلَتۡ مَوَٰزِينُهُۥ","فَهُوَ فِي عِيشَةٖ رَّاضِيَةٖ","وَأَمَّا مَنۡ خَفَّتۡ مَوَٰزِينُهُۥ","فَأُمُّهُۥ هَاوِيَةٞ","وَمَآ أَدۡرَىٰكَ مَا هِيَهۡ","نَارٌ حَامِيَةُۢ"]},{"id":100,"name":"العاديات","ayat":["وَٱلۡعَٰدِيَٰتِ ضَبۡحٗا","فَٱلۡمُورِيَٰتِ قَدۡحٗا","فَٱلۡمُغِيرَٰتِ صُبۡحٗا","فَأَثَرۡنَ بِهِۦ نَقۡعٗا","فَوَسَطۡنَ بِهِۦ جَمۡعًا","إِنَّ ٱلۡإِنسَٰنَ لِرَبِّهِۦ لَكَنُودٞ","وَإِنَّهُۥ عَلَىٰ ذَٰلِكَ لَشَهِيدٞ","وَإِنَّهُۥ لِحُبِّ ٱلۡخَيۡرِ لَشَدِيدٌ","۞أَفَلَا يَعۡلَمُ إِذَا بُعۡثِرَ مَا فِي ٱلۡقُبُورِ","وَحُصِّلَ مَا فِي ٱلصُّدُورِ","إِنَّ رَبَّهُم بِهِمۡ يَوۡمَئِذٖ لَّخَبِيرُۢ"]},{"id":99,"name":"الزلزلة","ayat":["إِذَا زُلۡزِلَتِ ٱلۡأَرۡضُ زِلۡزَالَهَا","وَأَخۡرَجَتِ ٱلۡأَرۡضُ أَثۡقَالَهَا","وَقَالَ ٱلۡإِنسَٰنُ مَا لَهَا","يَوۡمَئِذٖ تُحَدِّثُ أَخۡبَارَهَا","بِأَنَّ رَبَّكَ أَوۡحَىٰ لَهَا","يَوۡمَئِذٖ يَصۡدُرُ ٱلنَّاسُ أَشۡتَاتٗا لِّيُرَوۡاْ أَعۡمَٰلَهُمۡ","فَمَن يَعۡمَلۡ مِثۡقَالَ ذَرَّةٍ خَيۡرٗا يَرَهُۥ","وَمَن يَعۡمَلۡ مِثۡقَالَ ذَرَّةٖ شَرّٗا يَرَهُۥ"]},{"id":98,"name":"البينة","ayat":["لَمۡ يَكُنِ ٱلَّذِينَ كَفَرُواْ مِنۡ أَهۡلِ ٱلۡكِتَٰبِ وَٱلۡمُشۡرِكِينَ مُنفَكِّينَ حَتَّىٰ تَأۡتِيَهُمُ ٱلۡبَيِّنَةُ","رَسُولٞ مِّنَ ٱللَّهِ يَتۡلُواْ صُحُفٗا مُّطَهَّرَةٗ","فِيهَا كُتُبٞ قَيِّمَةٞ","وَمَا تَفَرَّقَ ٱلَّذِينَ أُوتُواْ ٱلۡكِتَٰبَ إِلَّا مِنۢ بَعۡدِ مَا جَآءَتۡهُمُ ٱلۡبَيِّنَةُ","وَمَآ أُمِرُوٓاْ إِلَّا لِيَعۡبُدُواْ ٱللَّهَ مُخۡلِصِينَ لَهُ ٱلدِّينَ حُنَفَآءَ وَيُقِيمُواْ ٱلصَّلَوٰةَ وَيُؤۡتُواْ ٱلزَّكَوٰةَۚ وَذَٰلِكَ دِينُ ٱلۡقَيِّمَةِ","إِنَّ ٱلَّذِينَ كَفَرُواْ مِنۡ أَهۡلِ ٱلۡكِتَٰبِ وَٱلۡمُشۡرِكِينَ فِي نَارِ جَهَنَّمَ خَٰلِدِينَ فِيهَآۚ أُوْلَـٰٓئِكَ هُمۡ شَرُّ ٱلۡبَرِيَّةِ","إِنَّ ٱلَّذِينَ ءَامَنُواْ وَعَمِلُواْ ٱلصَّـٰلِحَٰتِ أُوْلَـٰٓئِكَ هُمۡ خَيۡرُ ٱلۡبَرِيَّةِ","جَزَآؤُهُمۡ عِندَ رَبِّهِمۡ جَنَّـٰتُ عَدۡنٖ تَجۡرِي مِن تَحۡتِهَا ٱلۡأَنۡهَٰرُ خَٰلِدِينَ فِيهَآ أَبَدٗاۖ رَّضِيَ ٱللَّهُ عَنۡهُمۡ وَرَضُواْ عَنۡهُۚ ذَٰلِكَ لِمَنۡ خَشِيَ رَبَّهُۥ"]},{"id":97,"name":"القدر","ayat":["إِنَّآ أَنزَلۡنَٰهُ فِي لَيۡلَةِ ٱلۡقَدۡرِ","وَمَآ أَدۡرَىٰكَ مَا لَيۡلَةُ ٱلۡقَدۡرِ","لَيۡلَةُ ٱلۡقَدۡرِ خَيۡرٞ مِّنۡ أَلۡفِ شَهۡرٖ","تَنَزَّلُ ٱلۡمَلَـٰٓئِكَةُ وَٱلرُّوحُ فِيهَا بِإِذۡنِ رَبِّهِم مِّن كُلِّ أَمۡرٖ","سَلَٰمٌ هِيَ حَتَّىٰ مَطۡلَعِ ٱلۡفَجۡرِ"]},{"id":96,"name":"العلق","ayat":["ٱقۡرَأۡ بِٱسۡمِ رَبِّكَ ٱلَّذِي خَلَقَ","خَلَقَ ٱلۡإِنسَٰنَ مِنۡ عَلَقٍ","ٱقۡرَأۡ وَرَبُّكَ ٱلۡأَكۡرَمُ","ٱلَّذِي عَلَّمَ بِٱلۡقَلَمِ","عَلَّمَ ٱلۡإِنسَٰنَ مَا لَمۡ يَعۡلَمۡ","كَلَّآ إِنَّ ٱلۡإِنسَٰنَ لَيَطۡغَىٰٓ","أَن رَّءَاهُ ٱسۡتَغۡنَىٰٓ","إِنَّ إِلَىٰ رَبِّكَ ٱلرُّجۡعَىٰٓ","أَرَءَيۡتَ ٱلَّذِي يَنۡهَىٰ","عَبۡدًا إِذَا صَلَّىٰٓ","أَرَءَيۡتَ إِن كَانَ عَلَى ٱلۡهُدَىٰٓ","أَوۡ أَمَرَ بِٱلتَّقۡوَىٰٓ","أَرَءَيۡتَ إِن كَذَّبَ وَتَوَلَّىٰٓ","أَلَمۡ يَعۡلَم بِأَنَّ ٱللَّهَ يَرَىٰ","كَلَّا لَئِن لَّمۡ يَنتَهِ لَنَسۡفَعَۢا بِٱلنَّاصِيَةِ","نَاصِيَةٖ كَٰذِبَةٍ خَاطِئَةٖ","فَلۡيَدۡعُ نَادِيَهُۥ","سَنَدۡعُ ٱلزَّبَانِيَةَ","كَلَّا لَا تُطِعۡهُ وَٱسۡجُدۡۤ وَٱقۡتَرِب۩"]},{"id":95,"name":"التين","ayat":["وَٱلتِّينِ وَٱلزَّيۡتُونِ","وَطُورِ سِينِينَ","وَهَٰذَا ٱلۡبَلَدِ ٱلۡأَمِينِ","لَقَدۡ خَلَقۡنَا ٱلۡإِنسَٰنَ فِيٓ أَحۡسَنِ تَقۡوِيمٖ","ثُمَّ رَدَدۡنَٰهُ أَسۡفَلَ سَٰفِلِينَ","إِلَّا ٱلَّذِينَ ءَامَنُواْ وَعَمِلُواْ ٱلصَّـٰلِحَٰتِ فَلَهُمۡ أَجۡرٌ غَيۡرُ مَمۡنُونٖ","فَمَا يُكَذِّبُكَ بَعۡدُ بِٱلدِّينِ","أَلَيۡسَ ٱللَّهُ بِأَحۡكَمِ ٱلۡحَٰكِمِينَ"]},{"id":94,"name":"الشرح","ayat":["أَلَمۡ نَشۡرَحۡ لَكَ صَدۡرَكَ","وَوَضَعۡنَا عَنكَ وِزۡرَكَ","ٱلَّذِيٓ أَنقَضَ ظَهۡرَكَ","وَرَفَعۡنَا لَكَ ذِكۡرَكَ","فَإِنَّ مَعَ ٱلۡعُسۡرِ يُسۡرًا","إِنَّ مَعَ ٱلۡعُسۡرِ يُسۡرٗا","فَإِذَا فَرَغۡتَ فَٱنصَبۡ","وَإِلَىٰ رَبِّكَ فَٱرۡغَب"]},{"id":93,"name":"الضحى","ayat":["وَٱلضُّحَىٰ","وَٱلَّيۡلِ إِذَا سَجَىٰ","مَا وَدَّعَكَ رَبُّكَ وَمَا قَلَىٰ","وَلَلۡأٓخِرَةُ خَيۡرٞ لَّكَ مِنَ ٱلۡأُولَىٰ","وَلَسَوۡفَ يُعۡطِيكَ رَبُّكَ فَتَرۡضَىٰٓ","أَلَمۡ يَجِدۡكَ يَتِيمٗا فَـَٔاوَىٰ","وَوَجَدَكَ ضَآلّٗا فَهَدَىٰ","وَوَجَدَكَ عَآئِلٗا فَأَغۡنَىٰ","فَأَمَّا ٱلۡيَتِيمَ فَلَا تَقۡهَرۡ","وَأَمَّا ٱلسَّآئِلَ فَلَا تَنۡهَرۡ","وَأَمَّا بِنِعۡمَةِ رَبِّكَ فَحَدِّثۡ"]},{"id":1,"name":"الفاتحة","ayat":["بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ","ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَٰلَمِينَ","ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ","مَٰلِكِ يَوۡمِ ٱلدِّينِ","إِيَّاكَ نَعۡبُدُ وَإِيَّاكَ نَسۡتَعِينُ","ٱهۡدِنَا ٱلصِّرَٰطَ ٱلۡمُسۡتَقِيمَ","صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ"]}];
 // Al-Fatiha sits last in the list; every other surah is ordered from An-Nas back to Ad-Duha.
 const CARS=[
@@ -709,7 +741,7 @@ function renderLetters(){
   let h=header('عالم الحروف');let nextMarked=false;
   WORLDS.forEach((w,wi)=>{
     const done=[0,1,2,3].filter(k=>ls(wi*4+k)>0).length+((S.boss[wi]||0)>0?1:0);
-    const ng=GAMES.find(g=>g.from===wi*4&&g.from>0);
+    const ngs=GAMES.filter(g=>g.from===wi*4&&g.from>0);const ng=ngs.length?{icon:ngs.map(g=>g.icon).join(''),name:ngs.map(g=>g.name).join(' + ')}:null;
     h+=`<section class="world" style="--wc:${w.c}"><h3><span>${w.name}</span>${ng?`<span class="newgame">لعبة جديدة: ${ng.icon} ${ng.name}</span>`:''}<small>${ar(done)}/${ar(5)}</small></h3><div class="nodes">`;
     for(let k=0;k<4;k++){const i=wi*4+k,open=letterOpen(i),s=ls(i);let cls='node';if(!open)cls+=' locked';else if(!s&&!nextMarked){cls+=' next';nextMarked=true}
       h+=`<button class="${cls}" data-act="letter" data-i="${i}" aria-label="حرف ${LETTERS[i][1]}">${LETTERS[i][0]}${s?`<span class="st">${starStr(s)}</span>`:''}</button>`}
@@ -907,7 +939,7 @@ function runShoot(cfg){
   function spawn(){
     const hasT=st.items.some(o=>o.l===st.target);
     const l=(!hasT||Math.random()<.38)?st.target:distractors(st.target,cfg.pool,1,d)[0];
-    const el=document.createElement('button');el.className='tgt';el.textContent=LETTERS[l][0];el.style.width=el.style.height=size+'px';el.style.fontSize=(size*.58)+'px';
+    const el=document.createElement('button');el.className='tgt';el.innerHTML=glyph(l,d);el.style.width=el.style.height=size+'px';el.style.fontSize=(size*.58)+'px';
     el.style.setProperty('--tc',wc(l));el.setAttribute('aria-label',LETTERS[l][1]);
     let x;for(let t=0;t<8;t++){x=12+Math.random()*(W-size-24);if(!st.items.some(o=>Math.abs(o.x-x)<size&&o.y<size*1.6))break}
     const o={el,l,x,y:-size-10,ph:Math.random()*6,vy:H/fall*(perk('blaster')==='slow'?.75:1)};
@@ -968,7 +1000,7 @@ function runRace(cfg){
   function spawnGate(){
     const t=cfg.target();const cl=rnd(3);const ds=distractors(t,cfg.pool,2,d);const ls_=[];let q=0;for(let k=0;k<3;k++)ls_.push(k===cl?t:ds[q++]);
     const el=document.createElement('div');el.className='gate';const {x0,lw}=road();
-    el.innerHTML=ls_.map((l,k)=>`<div class="gblk" style="left:${x0+k*lw+(lw-bs)/2}px;width:${bs}px;height:${bs}px;font-size:${bs*.58}px;--tc:${wc(l)}">${LETTERS[l][0]}</div>`).join('');
+    el.innerHTML=ls_.map((l,k)=>`<div class="gblk" style="left:${x0+k*lw+(lw-bs)/2}px;width:${bs}px;height:${bs}px;font-size:${bs*.58}px;--tc:${wc(l)}">${glyph(l,d)}</div>`).join('');
     area.appendChild(el);const g={el,t,cl,ls:ls_,y:-bs-10,done:false,coin:false};st.gates.push(g);el.style.transform=`translateY(${g.y}px)`;
     if(st.gates.filter(x=>!x.done).length===1){upd();setTimeout(sayT,100)}
   }
@@ -1021,7 +1053,7 @@ function runListen(cfg){
   function next(){
     const t=cfg.target(true);const opts=shuffle([t,...distractors(t,cfg.pool,nOpt-1,d)]);round={t,opts};
     const cols=opts.length<=3?3:opts.length===4?2:3;
-    area.innerHTML=`<button class="bigspk" id="spk" data-act="sayprompt" aria-label="اسمع">🔊</button><div class="stat">أي حرف سمعت؟</div><div class="bgrid" style="grid-template-columns:repeat(${cols},1fr);max-width:${cols*110}px">${opts.map(l=>`<button class="opt" data-l="${l}" style="--tc:${wc(l)}">${LETTERS[l][0]}</button>`).join('')}</div>`;
+    area.innerHTML=`<button class="bigspk" id="spk" data-act="sayprompt" aria-label="اسمع">🔊</button><div class="stat">أي حرف سمعت؟</div><div class="bgrid" style="grid-template-columns:repeat(${cols},1fr);max-width:${cols*110}px">${opts.map(l=>`<button class="opt" data-l="${l}" style="--tc:${wc(l)}">${glyph(l,d)}</button>`).join('')}</div>`;
     upd();setTimeout(()=>{if(alive)G.say()},350);
   }
   area.addEventListener('click',e=>{const b=e.target.closest('.opt');if(!b||!alive||b.disabled)return;const l=+b.dataset.l;
@@ -1040,7 +1072,7 @@ function runMemory(cfg){
   const cards=shuffle(lt.flatMap(l=>[{l,k:'l'},{l,k:'p'}]));let open=[],matched=0,miss=0,lock=true,alive=true;
   document.getElementById('pl').textContent='🧠';document.getElementById('hearts').textContent='';
   const cols=cards.length<=6?3:4;
-  area.innerHTML=`<div class="stat" id="mst">تذكّر الأماكن! 👀</div><div class="bgrid" style="grid-template-columns:repeat(${cols},1fr);max-width:${cols*100}px">${cards.map((c,i)=>`<button class="mcard up" data-i="${i}">${c.k==='l'?`<span class="f l">${LETTERS[c.l][0]}</span>`:`<span class="f">${LETTERS[c.l][3]}<small>${LETTERS[c.l][2]}</small></span>`}</button>`).join('')}</div>`;
+  area.innerHTML=`<div class="stat" id="mst">تذكّر الأماكن! 👀</div><div class="bgrid" style="grid-template-columns:repeat(${cols},1fr);max-width:${cols*100}px">${cards.map((c,i)=>`<button class="mcard up" data-i="${i}">${c.k==='l'?`<span class="f l">${glyph(c.l,d)}</span>`:`<span class="f">${LETTERS[c.l][3]}<small>${LETTERS[c.l][2]}</small></span>`}</button>`).join('')}</div>`;
   const els=[...area.querySelectorAll('.mcard')];
   const upd=()=>{document.getElementById('gc').textContent=ar(run.coins);document.getElementById('pg').style.width=(matched/pairs*100)+'%'};upd();
   G={stop(){alive=false},say(){}};const me=G;
@@ -1069,7 +1101,7 @@ function runWhack(cfg){
     const free=ms.filter(m=>!m.classList.contains('up'));if(!free.length||ms.filter(m=>m.classList.contains('up')).length>=maxUp)return;
     const m=free[rnd(free.length)];const hasT=ms.some(x=>x.classList.contains('up')&&+x.dataset.l===st.target);
     const l=(!hasT&&Math.random()<.55)?st.target:distractors(st.target,cfg.pool,1,d)[0];
-    m.dataset.l=l;m.textContent=LETTERS[l][0];m.style.setProperty('--tc',wc(l));m.classList.remove('hit','hintglow');m.classList.add('up');
+    m.dataset.l=l;m.innerHTML=glyph(l,d);m.style.setProperty('--tc',wc(l));m.classList.remove('hit','hintglow');m.classList.add('up');
     if(st.hintT>0&&l===st.target)m.classList.add('hintglow');
     const stay=up*(st.slowT>0?2:1)*(perk('blaster')==='slow'?1.25:1);m._t=setTimeout(()=>{m.classList.remove('up','hintglow')},stay*1000);
   }
@@ -1122,13 +1154,43 @@ function runSimon(cfg){
     else{run.mist++;sfx.bad();bump(b);if(!L.hit(b)){alive=false;upd();endLose(me,()=>runSimon(cfg))}else{upd();setTimeout(()=>{if(alive)show()},700)}}});
   setTimeout(()=>{if(alive)newRound()},400);
 }
-const RUNNERS={shoot:runShoot,race:runRace,listen:runListen,memory:runMemory,whack:runWhack,pick:runPick,simon:runSimon};
+
+/* ---------- 8. FIND THE LETTER inside a real word ---------- */
+function runFind(cfg){
+  startGameScreen();scr.innerHTML=gameShell('board','وين حرف',{hint:1});
+  const area=document.getElementById('area'),run=cfg.run,d=cfg.d,L=makeLife('find');
+  const goal=5+Math.round(d*2);let ok=0,round=null,alive=true,lastW='';
+  const upd=()=>{document.getElementById('hearts').innerHTML=heartsHTML(L);document.getElementById('pl').textContent=LETTERS[round.t][0];document.getElementById('gc').textContent=ar(run.coins);document.getElementById('pg').style.width=(ok/goal*100)+'%';updPups(L)};
+  G={stop(){alive=false},say:()=>playLetter(round.t),pup(p){if(p==='hint'&&usePup(L,p)){area.querySelectorAll('.wtile').forEach(b=>{if(b.dataset.ok)b.classList.add('hintglow')});sfx.good();upd()}}};const me=G;
+  function next(){
+    const t=cfg.target(true);let cand=wordsWith(t).filter(([w])=>w!==lastW);
+    // later on, prefer words where the letter hides in the middle or the end
+    const inner=cand.filter(([w])=>posIn(w,t).some(p=>p!=='ini'));
+    if(inner.length&&Math.random()<.35+d*.6)cand=inner;
+    const [w,e]=cand[rnd(cand.length)]||[LETTERS[t][2],LETTERS[t][3]];lastW=w;round={t,w};
+    const tiles=wordForms(w);const where=posIn(w,t);
+    area.innerHTML=`<div class="stat">وين حرف <span style="font-family:var(--f-letter);color:var(--gold)">${LETTERS[t][0]}</span> في الكلمة؟</div>
+      <div class="pcard" style="padding:6px 22px"><span class="e">${e}</span><span class="w" style="font-size:30px">${w}</span></div>
+      <div class="wtiles">${tiles.map((f,k)=>`<button class="wtile" data-k="${k}" ${baseOf(f.c)===LETTERS[t][0]?'data-ok="1"':''}>${f.txt}</button>`).join('')}</div>`;
+    round.where=where;upd();setTimeout(()=>{if(alive)G.say()},300);
+  }
+  const POS={ini:'في أول الكلمة',med:'في وسط الكلمة',fin:'في آخر الكلمة',iso:'لحاله'};
+  area.addEventListener('click',e=>{const b=e.target.closest('.wtile');if(!b||!alive||b.disabled)return;
+    if(b.dataset.ok){ok++;const gain=7+hitBonus();run.coins+=gain;b.classList.add('ok');sfx.good();praise();
+      const k=+b.dataset.k,nW=wordForms(round.w).length;floatOn(b,'+'+ar(gain));const st=area.querySelector('.stat');if(st)st.innerHTML=`👏 صح! الحرف هنا ${k===0?POS.ini:k===nW-1?POS.fin:POS.med}`;
+      area.querySelectorAll('.wtile').forEach(x=>x.disabled=true);upd();
+      if(ok>=goal){alive=false;confetti(30);sfx.win();endWin(me,cfg)}else setTimeout(()=>{if(alive)next()},1500)}
+    else{run.mist++;sfx.bad();bump(b);b.disabled=true;b.style.opacity=.45;const c=baseOf(wordForms(round.w)[+b.dataset.k].c);const li=LETTERS.findIndex(x=>x[0]===c);if(li>=0)floatOn(b,'هذا '+c,'w');
+      if(!L.hit(b)){alive=false;upd();endLose(me,()=>runFind(cfg))}else{upd();setTimeout(()=>{if(alive)G.say()},500)}}});
+  next();
+}
+const RUNNERS={shoot:runShoot,race:runRace,listen:runListen,find:runFind,memory:runMemory,whack:runWhack,pick:runPick,simon:runSimon};
 
 /* ================= LEVEL FLOW: LETTERS ================= */
 function unlockedGames(i){return GAMES.filter(g=>g.from<=i)}
 function chooseGames(i,boss){
   const un=unlockedGames(i);const newest=un[un.length-1];const n=un.length<=2?2:3;
-  let list=[];if(newest.from>0&&!S.seen[newest.id])list.push(newest.id);
+  let list=un.filter(g=>g.from>0&&!S.seen[g.id]).map(g=>g.id).slice(0,2);
   if(boss&&!list.includes(newest.id))list.push(newest.id);
   const rest=shuffle(un.map(g=>g.id).filter(id=>!list.includes(id)));
   // keep the classics in early worlds, then mix everything
@@ -1166,6 +1228,12 @@ function startBoss(w){
     });
   });
 }
+function posExamples(i){
+  const ws=wordsWith(i);const lab={ini:'في الأول',med:'في الوسط',fin:'في الآخر'};const out=[];
+  for(const p of ['ini','med','fin']){const hit=ws.find(([w])=>posIn(w,i).includes(p)&&w!==LETTERS[i][2])||ws.find(([w])=>posIn(w,i).includes(p));
+    if(hit)out.push(`<div class="poscard"><small>${lab[p]} <span style="font-family:var(--f-letter);color:var(--red)">${shapeAt(hit[0],i,p)}</span></small><span class="e">${hit[1]}</span><span class="w">${hlWord(hit[0],i)}</span></div>`)}
+  return out.length?`<div class="hint">📍 شكل الحرف في الكلمات</div><div class="posrow" style="grid-template-columns:repeat(${out.length},1fr)">${out.join('')}</div>`:'';
+}
 function showLearn(i,next){
   const [l,name,word,emo]=LETTERS[i];
   const nonJ='اأإآدذرزوؤء';const joins=!nonJ.includes(word[0]);
@@ -1178,6 +1246,7 @@ function showLearn(i,next){
     <div class="hint">👆 اضغط على الحرف واسمعه</div>
     <div class="forms">${forms.map(f=>`<span>${f}</span>`).join('')}</div>
     <button class="wordcard" data-act="sayword"><span class="emo">${emo}</span><span class="w">${wordHTML}</span></button>
+    ${posExamples(i)}
     <button class="btn big gold" data-act="learnnext">يلا نلعب! 🎯</button>
   </div>`;
   cur.learn={i,next};setTimeout(()=>{playLetter(i);playClip('W'+i)},300);

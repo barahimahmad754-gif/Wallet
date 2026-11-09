@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+# appblock — حجب تطبيقات معينة عن جوالات معينة عن طريق Pi-hole
+set -euo pipefail
+
+DB=/etc/pihole/gravity.db
+FTLDB=/etc/pihole/pihole-FTL.db
+CRON_DIR=/etc/cron.d
+
+declare -A APPS=(
+  [tiktok]='(\.|^)(tiktok|tiktokv|tiktokw|tiktokcdn|tiktokcdn-us|byteoversea|ibytedtos|ibyteimg|muscdn|musical)\.(com|ly|net|us)$'
+  [snapchat]='(\.|^)(snapchat\.com|snap-dev\.net|sc-cdn\.net|sc-static\.net|sc-prod\.net|snapkit\.com|snapads\.com|feelinsonice-hrd\.appspot\.com)$'
+  [instagram]='(\.|^)(instagram\.com|cdninstagram\.com|instagr\.am|ig\.me)$'
+  [youtube]='(\.|^)(youtube\.com|youtu\.be|ytimg\.com|googlevideo\.com|youtube-nocookie\.com|youtubei\.googleapis\.com|yt3\.ggpht\.com)$'
+  [twitter]='(\.|^)(twitter\.com|x\.com|twimg\.com|t\.co)$'
+  [discord]='(\.|^)(discord\.com|discord\.gg|discordapp\.com|discordapp\.net|discord\.media)$'
+  [whatsapp]='(\.|^)(whatsapp\.com|whatsapp\.net|wa\.me)$'
+  [roblox]='(\.|^)(roblox\.com|rbxcdn\.com|rbx\.com|robloxlabs\.com)$'
+  [fortnite]='(\.|^)(epicgames\.com|epicgames\.dev|epicgamescdn\.com|fortnite\.com|unrealengine\.com)$'
+  [pubg]='(\.|^)(pubgmobile\.com|pubg\.com|igamecj\.com|gcloudsdk\.com|proximabeta\.com|anticheatexpert\.com|tencentgames\.com)$'
+  [freefire]='(\.|^)(garena\.com|freefiremobile\.com|garenanow\.com)$'
+  [vpn]='(\.|^)(nordvpn\.com|expressvpn\.com|protonvpn\.com|surfshark\.com|windscribe\.com|hotspotshield\.com|psiphon\.ca|tunnelbear\.com|cyberghostvpn\.com|turbovpn\.com|vpnsuper\.com|hide\.me|privateinternetaccess\.com|mullvad\.net|thundervpn\.com|betternet\.co)$'
+  [doh]='(\.|^)(dns\.google|cloudflare-dns\.com|one\.one\.one\.one|dns\.quad9\.net|doh\.opendns\.com|dns\.nextdns\.io|dns\.adguard\.com|dns\.adguard-dns\.com)$'
+)
+
+die() { printf '\033[1;31m%s\033[0m\n' "$*" >&2; exit 1; }
+ok()  { printf '\033[1;32m%s\033[0m\n' "$*"; }
+sql() { pihole-FTL sqlite3 "$DB" "$1"; }
+esc() { printf '%s' "${1//\'/\'\'}"; }
+reload() { pihole reloadlists >/dev/null 2>&1 || pihole restartdns reload-lists >/dev/null 2>&1 || true; }
+
+need_root() { [[ $EUID -eq 0 ]] || die "شغّلها بـ sudo"; }
+need_app() {
+  [[ -n "${1:-}" && -n "${APPS[$1]:-}" ]] || die "تطبيق غير معروف: ${1:-}  (شوف: appblock apps)"
+}
+
+group_name() { echo "appblock-$1"; }
+
+# يجهز المجموعة وقاعدة الحجب حق التطبيق، ويرجع رقم المجموعة
+ensure_app() {
+  local app="$1" g re gid did
+  g="$(group_name "$app")"; re="$(esc "${APPS[$app]}")"
+  sql "INSERT OR IGNORE INTO \"group\" (name, description) VALUES ('$g', 'حجب $app');"
+  gid="$(sql "SELECT id FROM \"group\" WHERE name='$g';")"
+  did="$(sql "SELECT id FROM domainlist WHERE type=3 AND domain='$re';")"
+  if [[ -z "$did" ]]; then
+    sql "INSERT INTO domainlist (type, domain, comment) VALUES (3, '$re', 'appblock:$app');"
+    did="$(sql "SELECT id FROM domainlist WHERE type=3 AND domain='$re';")"
+    # القاعدة تنضاف تلقائياً للمجموعة الافتراضية (كل البيت)؛ نشيلها منها
+    sql "DELETE FROM domainlist_by_group WHERE domainlist_id=$did AND group_id=0;"
+  fi
+  sql "INSERT OR IGNORE INTO domainlist_by_group (domainlist_id, group_id) VALUES ($did, $gid);"
+  echo "$gid:$did"
+}
+
+ensure_client() {
+  local who="$1"
+  # عناوين MAC تنحفظ بحروف كبيرة مثل لوحة Pi-hole
+  [[ "$who" =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]] && who="${who^^}"
+  who="$(esc "$who")"
+  sql "INSERT OR IGNORE INTO client (ip, comment) VALUES ('$who', 'appblock');"
+  sql "SELECT id FROM client WHERE ip='$who';"
+}
+
+cmd_block() {
+  need_root
+  local who="${1:-}" app
+  [[ -n "$who" ]] || die "الاستخدام: appblock block <MAC أو IP أو all> <تطبيق> [تطبيق...]"
+  shift; [[ $# -gt 0 ]] || die "حدد تطبيق واحد على الأقل"
+  for app in "$@"; do
+    need_app "$app"
+    local ids gid did cid
+    ids="$(ensure_app "$app")"; gid="${ids%%:*}"; did="${ids##*:}"
+    if [[ "$who" == "all" ]]; then
+      sql "INSERT OR IGNORE INTO domainlist_by_group (domainlist_id, group_id) VALUES ($did, 0);"
+      ok "تم حجب $app عن كل أجهزة البيت"
+    else
+      cid="$(ensure_client "$who")"
+      sql "INSERT OR IGNORE INTO client_by_group (client_id, group_id) VALUES ($cid, $gid);"
+      ok "تم حجب $app عن $who"
+    fi
+  done
+  reload
+}
+
+cmd_unblock() {
+  need_root
+  local who="${1:-}" app
+  [[ "$who" =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]] && who="${who^^}"
+  [[ -n "$who" ]] || die "الاستخدام: appblock unblock <MAC أو IP أو all> <تطبيق> [تطبيق...]"
+  shift; [[ $# -gt 0 ]] || die "حدد تطبيق واحد على الأقل"
+  for app in "$@"; do
+    need_app "$app"
+    local g re
+    g="$(group_name "$app")"; re="$(esc "${APPS[$app]}")"
+    if [[ "$who" == "all" ]]; then
+      sql "DELETE FROM domainlist_by_group WHERE group_id=0 AND domainlist_id IN (SELECT id FROM domainlist WHERE type=3 AND domain='$re');"
+    else
+      sql "DELETE FROM client_by_group WHERE client_id=(SELECT id FROM client WHERE ip='$(esc "$who")') AND group_id=(SELECT id FROM \"group\" WHERE name='$g');"
+    fi
+    ok "تم فك حجب $app عن $who"
+  done
+  reload
+}
+
+cmd_on()  { need_root; need_app "${1:-}"; ensure_app "$1" >/dev/null; sql "UPDATE \"group\" SET enabled=1 WHERE name='$(group_name "$1")';"; reload; ok "الحجب شغّال: $1"; }
+cmd_off() { need_root; need_app "${1:-}"; ensure_app "$1" >/dev/null; sql "UPDATE \"group\" SET enabled=0 WHERE name='$(group_name "$1")';"; reload; ok "الحجب موقّف مؤقتاً: $1"; }
+
+valid_time() { [[ "$1" =~ ^([01]?[0-9]|2[0-3]):[0-5][0-9]$ ]]; }
+
+cmd_schedule() {
+  need_root
+  local app="${1:-}" from="${2:-}" to="${3:-}"
+  need_app "$app"
+  if [[ "$from" == "remove" ]]; then
+    rm -f "$CRON_DIR/appblock-$app"; cmd_on "$app"; ok "انشال الجدول، والحجب صار دائم: $app"; return
+  fi
+  valid_time "$from" && valid_time "$to" || die "الاستخدام: appblock schedule <تطبيق> <من HH:MM> <إلى HH:MM>   مثال: appblock schedule tiktok 23:00 06:00"
+  local fh fm th tm
+  fh=$((10#${from%%:*})); fm=$((10#${from##*:})); th=$((10#${to%%:*})); tm=$((10#${to##*:}))
+  cat > "$CRON_DIR/appblock-$app" <<EOF
+# appblock: حجب $app من $from إلى $to
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+$fm $fh * * * root /usr/local/bin/appblock on $app >/dev/null 2>&1
+$tm $th * * * root /usr/local/bin/appblock off $app >/dev/null 2>&1
+EOF
+  chmod 644 "$CRON_DIR/appblock-$app"
+  # نطبّق الحالة الصحيحة الحين
+  local now start end
+  now=$((10#$(date +%H) * 60 + 10#$(date +%M))); start=$((fh * 60 + fm)); end=$((th * 60 + tm))
+  if { [[ $start -lt $end ]] && [[ $now -ge $start && $now -lt $end ]]; } || \
+     { [[ $start -ge $end ]] && [[ $now -ge $start || $now -lt $end ]]; }; then
+    cmd_on "$app"
+  else
+    cmd_off "$app"
+  fi
+  ok "تم: $app محجوب يومياً من $from إلى $to"
+}
+
+cmd_devices() {
+  echo "الأجهزة اللي شافها Pi-hole (الأحدث أول):"
+  printf '%-19s %-16s %-24s %s\n' "MAC" "IP" "الاسم" "الشركة"
+  pihole-FTL sqlite3 -separator '|' "$FTLDB" \
+    "SELECT n.hwaddr, a.ip, IFNULL(a.name,''), IFNULL(n.macVendor,'') FROM network n JOIN network_addresses a ON a.network_id=n.id WHERE a.ip NOT LIKE '%:%' ORDER BY a.lastSeen DESC;" |
+    while IFS='|' read -r mac ip name vendor; do printf '%-19s %-16s %-24s %s\n' "$mac" "$ip" "$name" "$vendor"; done
+}
+
+cmd_status() {
+  echo "الحجب الحالي:"
+  sql "SELECT g.name, CASE g.enabled WHEN 1 THEN 'شغّال' ELSE 'موقّف' END, IFNULL((SELECT group_concat(c.ip, ', ') FROM client c JOIN client_by_group cg ON cg.client_id=c.id WHERE cg.group_id=g.id),'-') FROM \"group\" g WHERE g.name LIKE 'appblock-%';" |
+    while IFS='|' read -r g st clients; do echo "  ${g#appblock-}: $st  ← $clients"; done
+  sql "SELECT comment FROM domainlist d JOIN domainlist_by_group dg ON dg.domainlist_id=d.id WHERE dg.group_id=0 AND d.comment LIKE 'appblock:%';" |
+    while read -r c; do echo "  ${c#appblock:}: محجوب عن كل البيت"; done
+  ls "$CRON_DIR"/appblock-* 2>/dev/null | while read -r f; do sed -n '1s/^# appblock: /  ⏰ /p' "$f"; done
+}
+
+cmd_apps() { echo "التطبيقات المتاحة:"; printf '  %s\n' "${!APPS[@]}" | sort; }
+
+cmd_help() {
+  cat <<'EOF'
+appblock — حجب تطبيقات عن جوالات معينة
+
+  sudo appblock devices                         يعرض أجهزة البيت (عشان تعرف MAC الجوال)
+  sudo appblock apps                            التطبيقات المتاحة
+  sudo appblock block <جهاز> <تطبيق...>          يحجب تطبيق (أو أكثر) عن جهاز
+  sudo appblock unblock <جهاز> <تطبيق...>        يفك الحجب
+  sudo appblock schedule <تطبيق> <من> <إلى>      يخلي الحجب في وقت معين بس
+  sudo appblock schedule <تطبيق> remove         يشيل الجدول (حجب دائم)
+  sudo appblock on|off <تطبيق>                  تشغيل/إيقاف الحجب مؤقتاً
+  sudo appblock status                          يعرض الحجب الحالي
+
+<جهاز> = عنوان MAC (الأفضل) أو IP، أو all لكل البيت.
+
+أمثلة:
+  sudo appblock block aa:bb:cc:dd:ee:ff tiktok snapchat vpn doh
+  sudo appblock schedule tiktok 23:00 06:00
+  sudo appblock block all tiktok
+EOF
+}
+
+case "${1:-help}" in
+  block)    shift; cmd_block "$@" ;;
+  unblock)  shift; cmd_unblock "$@" ;;
+  on)       shift; cmd_on "$@" ;;
+  off)      shift; cmd_off "$@" ;;
+  schedule) shift; cmd_schedule "$@" ;;
+  devices)  cmd_devices ;;
+  status)   cmd_status ;;
+  apps)     cmd_apps ;;
+  *)        cmd_help ;;
+esac

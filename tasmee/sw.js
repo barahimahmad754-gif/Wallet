@@ -1,5 +1,5 @@
 /* دفتر التسميع — service worker: الإشعارات + فتح التطبيق عند ضعف الاتصال */
-const CACHE = "tasmee-v2";
+const CACHE = "tasmee-v3";
 const SHELL = ["./", "config.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

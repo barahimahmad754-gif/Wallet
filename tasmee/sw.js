@@ -1,20 +1,21 @@
 /* دفتر التسميع — service worker: الإشعارات + فتح التطبيق عند ضعف الاتصال */
-const CACHE = "tasmee-v3";
+const CACHE = "tasmee-v4";
 const SHELL = ["./", "config.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {}).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: "reload" })))).catch(() => {}).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
-/* the app's own files: the network first (so updates arrive), the saved copy when the network is slow or absent */
+/* the app's own files: the network first (so updates arrive), the saved copy when the network is slow or absent.
+   "no-cache" asks GitHub every time (a tiny 304 when nothing changed), so a new version shows up at once. */
 self.addEventListener("fetch", e => {
   const r = e.request;
   if (r.method !== "GET" || new URL(r.url).origin !== location.origin) return;
   const saved = () => caches.match(r, { ignoreSearch: true }).then(m => m || (r.mode === "navigate" ? caches.match("./") : undefined));
-  const fresh = fetch(r).then(res => {
+  const fresh = fetch(r.url, { cache: "no-cache", credentials: "same-origin" }).then(res => {
     if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(r.mode === "navigate" ? "./" : r, copy)) }
     return res;
   });

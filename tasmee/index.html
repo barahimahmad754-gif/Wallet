@@ -1700,12 +1700,14 @@ function renderJuz(rv){
    the corrected part is added as a new record (import), then the old part is removed */
 function openEdit(key){
   const[id,k]=key.split("|"),r=records.find(x=>x.id===id);if(!r||!r[k])return;
-  const E={from:r[k].from,to:r[k].to,hes:r[k].hes||0,err:r[k].err||0};
-  const d=new Date(r.at);
+  const E={from:r[k].from,to:r[k].to,hes:r[k].hes||0,err:r[k].err||0,day:r.day||dayKey(r.at)};
+  const d=new Date(r.at),day0=E.day;
   const el=document.createElement("div");el.className="sheet";
   el.innerHTML=`<div class="sheet-bg" data-close></div><div class="sheet-in" role="dialog" aria-label="تعديل التسميع">
     <div class="ph"><b>تعديل ${PARTS[k]}</b><button class="lvl-x" data-close>إغلاق</button></div>
     <p class="lead" style="font-size:13px">${esc(disp(r.reader))}، ${d.toLocaleDateString("ar-SA",{weekday:"long",day:"numeric",month:"long"})}${r.listener===r.reader?"، سمّع لنفسه":`، السامع: ${esc(disp(r.listener))}`}</p>
+    <div class="dayseg" style="margin:4px 0 10px"><button data-dd="${today()}">اليوم</button><button data-dd="${yKey()}">أمس</button>
+      <label style="flex:1.4;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)">يوم آخر<input type="date" data-dpick max="${today()}" value="${E.day}" style="flex:1;min-width:0;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font:inherit;font-size:13px"></label></div>
     <div class="sum" data-sum></div>
     <div class="manual">
       <label>من سورة<input list="surahs" data-m="from" value="${SURAH[E.from]}" autocomplete="off"></label>
@@ -1724,10 +1726,14 @@ function openEdit(key){
   const paint=()=>{
     q("[data-sum]").innerHTML=`<span class="s">${SURAH[E.from]}</span>${E.from!==E.to?` <span class="w">إلى</span> <span class="s">${SURAH[E.to]}</span>`:""} <span class="amt">${amtTxt(E)}</span>`;
     q('[data-v="hes"]').textContent=nf(E.hes);q('[data-v="err"]').textContent=nf(E.err);
+    el.querySelectorAll("[data-dd]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.dd===E.day)));
+    if(q("[data-dpick]").value!==E.day)q("[data-dpick]").value=E.day;
     const rt=rateOf(E),v=q("[data-verdict]");v.className="verdict r"+rt;
     v.innerHTML=`${rt===4?"✗ ":"✓ "}${RATES[rt]} <small>المسموح ${nf(allowOf(E))} ترددات لهذا المقدار، والخطأ بترددين${pointsOf(E)?`. المحسوب عليه: ${nf(pointsOf(E))}`:""}</small>`;
   };
   el.querySelectorAll("[data-close]").forEach(b=>b.onclick=close);
+  el.querySelectorAll("[data-dd]").forEach(b=>b.onclick=()=>{E.day=b.dataset.dd;paint()});
+  q("[data-dpick]").onchange=e=>{const x=e.target.value;if(/^\d{4}-\d{2}-\d{2}$/.test(x)&&x<=today()){E.day=x;paint()}else e.target.value=E.day};
   el.querySelectorAll("[data-m]").forEach(inp=>{
     const apply=final=>{const i=findSurah(inp.value);
       if(i==null){if(final&&inp.value.trim())inp.classList.add("bad");return}
@@ -1739,10 +1745,13 @@ function openEdit(key){
     const m=q("[data-msg]"),btn=q("[data-save]");
     if(el.querySelector(".bad"))return m.textContent="اكتب اسم السورة صحيحًا";
     const o=r[k];
-    if(E.from===o.from&&E.to===o.to&&E.hes===(o.hes||0)&&E.err===(o.err||0))return close();
+    if(E.from===o.from&&E.to===o.to&&E.hes===(o.hes||0)&&E.err===(o.err||0)&&E.day===day0)return close();
+    if(E.day!==day0&&records.some(x=>x.id!==r.id&&x.reader===r.reader&&(x.day||dayKey(x.at))===E.day&&x[k]&&!x[k].skipped))
+      return m.textContent=`${PARTS[k]} مسجّلة لـ ${disp(r.reader)} في ذلك اليوم من قبل`;
     btn.disabled=true;btn.textContent="جارٍ الحفظ…";m.textContent="";
     const skip={from:null,to:null,hes:0,err:0,skipped:true},part={from:E.from,to:E.to,hes:E.hes,err:E.err,skipped:false};
-    const nr={id:Date.now()+"-"+Math.random().toString(36).slice(2,6),day:r.day||dayKey(r.at),reader:r.reader,listener:r.listener,at:r.at,
+    const atOn=()=>{const[y,mo,dd]=E.day.split("-").map(Number),t=new Date(r.at);return new Date(y,mo-1,dd,t.getHours(),t.getMinutes(),t.getSeconds()).getTime()};
+    const nr={id:Date.now()+"-"+Math.random().toString(36).slice(2,6),day:E.day,reader:r.reader,listener:r.listener,at:E.day===day0?r.at:atOn(),
       near:k==="near"?part:skip,far:k==="far"?part:skip};
     const other=k==="near"?"far":"near",clean=x=>{const{_u,_old,...b}=x;return b};
     const recs=records.filter(x=>x.id!==r.id).map(clean);

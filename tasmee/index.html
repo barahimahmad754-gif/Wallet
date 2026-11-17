@@ -612,6 +612,15 @@ header,body::before{background:color-mix(in srgb,var(--bg) 86%,transparent);-web
 .ls-d{font-size:12px;color:var(--muted);width:100%}
 .ls-r{font-family:var(--quran);font-size:15px;color:var(--muted)}
 .ls-p{display:flex;gap:4px;margin-inline-start:auto}
+
+/* الرسائل المجدولة */
+.sch-sub{display:block;font-size:12px;color:var(--muted);margin-top:2px;font-weight:400}
+.sch-body{display:block;font-size:14px;line-height:1.5}
+.sch-when{display:block;font-size:12px;color:var(--goldInk);margin-top:2px}
+.sch-on{width:20px;height:20px;accent-color:var(--green)}
+.sdays{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.sdays button{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:13px;color:var(--muted)}
+.sdays button[aria-pressed="true"]{background:var(--green-soft);color:var(--green);border-color:color-mix(in srgb,var(--green) 40%,transparent);font-weight:700}
 </style>
 </head>
 <body>
@@ -1042,7 +1051,7 @@ function bindSubs(root){(root||view).querySelectorAll("[data-sub]").forEach(b=>b
   if(k==="lesson"||k==="rec")recSub=k;else if(SECS.students.includes(k))stuSub=k;goTab(k)})}
 function bindTmode(){bindSubs(view)}
 /* from the data views back to the recording form, keeping the loaded data */
-function toRec(){recSub="rec";room=false;unlocked=false;trusted=false;pin=null;focus=null;focusJuz=null;tmode="rec";F={reader:"",near:blank(),far:blank(),touched:false};renderAdd();window.scrollTo(0,0)}
+function toRec(){if(recDayMode!=="t"){recDayMode="t";locks={};setTimeout(loadPublic,0)}recSub="rec";room=false;unlocked=false;trusted=false;pin=null;focus=null;focusJuz=null;tmode="rec";F={reader:"",near:blank(),far:blank(),touched:false};renderAdd();window.scrollTo(0,0)}
 /* the teacher room opened from the normal page, using the remembered device */
 let tLoadedAt=0,tFresh=false;
 function helloOnce(){const k=today();if(lsGet("tasmee-hello","")===k||!pin)return;try{api("planHello",pin).then(()=>lsSet("tasmee-hello",k)).catch(()=>{})}catch(e){}}
@@ -1186,7 +1195,8 @@ function choiceBox(){
   const e=F.editRec,both=e&&!e.near.skipped&&!e.far.skipped;
   const rng=k=>pl&&pl.box[k==="near"?3:4]?`<small>${planRange(pl.box[k==="near"?3:4])}</small>`:"";
   const opts=[["near","القريبة",!ln],["far","البعيدة",!lf],...(both?[["both","القريبة والبعيدة",!ln&&!lf]]:[])].filter(o=>o[2]);
-  const done=[ln&&`القريبة سُجّلت اليوم عند ${esc(disp(ln.by))}`,lf&&`البعيدة سُجّلت اليوم عند ${esc(disp(lf.by))}`].filter(Boolean);
+  const dw=recDayMode==="y"?"أمس":"اليوم";
+  const done=[ln&&`القريبة سُجّلت ${dw} عند ${esc(disp(ln.by))}`,lf&&`البعيدة سُجّلت ${dw} عند ${esc(disp(lf.by))}`].filter(Boolean);
   return `<div class="lbl">${F.reader===me?"ماذا سمّعت؟":"ماذا قرأ؟"}</div>
   <div class="choice">${opts.map(([k,t])=>`<button data-ch="${k}" aria-pressed="${F.choice===k}">${t}${F.choice?"":rng(k)}</button>`).join("")}</div>
   ${done.map(t=>`<div class="locked" style="margin:8px 2px 0"><i>✓</i><span>${t}</span></div>`).join("")}`;
@@ -1207,7 +1217,7 @@ function setChoice(k){
 }
 function partCard(part){
   const p=F[part],title=PARTS[part],lk=lockOf(F.reader,part);
-  if(lk)return `<div class="card"><div class="ph"><b>${title}</b></div><div class="locked"><i>✓</i><span>سُجّلت اليوم عند ${esc(disp(lk.by))}</span></div></div>`;
+  if(lk)return `<div class="card"><div class="ph"><b>${title}</b></div><div class="locked"><i>✓</i><span>سُجّلت ${recDayMode==="y"?"أمس":"اليوم"} عند ${esc(disp(lk.by))}</span></div></div>`;
   if(p.plan&&!p.manual)return `<div class="card" data-part="${part}" data-planned="1">
     <div class="ph"><b>${title}</b><button class="side" data-manual>مقدار آخر</button></div>
     <div class="body">
@@ -2715,11 +2725,16 @@ function pushLessonEvt(rec){
   api("pushSend",pin||tpin,[rec.student],isExam(rec)?"نتيجة الاختبار":"نتيجة الدرس",body,"result").catch(()=>{});
 }
 /* teacher: «المزيد ← الإشعارات» */
-let pushInfoC=null;
+let pushInfoC=null,pushSchedC=null;
+const SDN=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const t12=t=>{const[h,m]=t.split(":").map(Number);return`${nf(h%12||12)}:${nf(Math.floor(m/10))}${nf(m%10)} ${h<12?"صباحًا":"مساءً"}`};
+const daysTx=d=>{const s=[...d].sort((a,b)=>a-b);return s.length===7?"كل يوم":s.join()==="0,1,2,3,4"?"من الأحد إلى الخميس":s.map(i=>SDN[i]).join("، ")};
 function renderPush(rv){
   const I=pushInfoC,again=()=>{if(room&&unlocked&&rtab==="push")renderRoom()};
   if(!I){rv.innerHTML=`<p class="empty">جارٍ التحميل…</p>`;
     api("pushInfo",pin).then(r=>{pushInfoC=r&&r.ok?r:{err:1};again()}).catch(()=>{pushInfoC={err:1};again()});return}
+  if(pushSchedC===null&&!I.err){pushSchedC=false;
+    api("pushSchedGet",pin).then(r=>{pushSchedC=r&&r.ok?r:{err:1};again()}).catch(()=>{pushSchedC={err:1};again()})}
   if(I.err){rv.innerHTML=`<div class="card"><b>الإشعارات غير مفعّلة في الخادم</b><p class="lead" style="font-size:14px">أضف ملف Push.gs إلى مشروع Apps Script، شغّل الدالة pushSetup مرة واحدة، ثم انشر إصدارًا جديدًا.</p><button class="btn line" id="pre" style="margin-top:8px">أعد المحاولة</button></div>`;
     $("#pre").onclick=()=>{pushInfoC=null;renderRoom()};return}
   const on=new Set(I.names),have=roster.filter(n=>on.has(n)),miss=roster.filter(n=>!on.has(n)),C=I.cfg;
@@ -2731,6 +2746,14 @@ function renderPush(rv){
     <label class="fld">إلى<select id="pto"><option value="*">كل من فعّل الإشعارات (${nf(have.length)})</option>${have.map(n=>`<option value="${esc(n)}">${esc(disp(n))}</option>`).join("")}</select></label>
     <label class="fld">نص الرسالة<textarea id="pmsg" rows="3" maxlength="300" placeholder="مثال: حلقة اليوم بعد صلاة العصر مباشرة"></textarea></label>
     <p class="okmsg" id="pok"></p><button class="btn" id="psend" style="margin-top:10px">أرسل الإشعار</button></div>
+  <div class="card"><b>رسائل مجدولة</b><small class="sch-sub">تُرسل تلقائيًا لكل من فعّل الإشعارات، في الأيام والوقت الذي تختاره${pushSchedC&&pushSchedC.tz&&pushSchedC.tz!=="Asia/Riyadh"?` (بتوقيت ${esc(pushSchedC.tz)})`:""}</small>
+    ${!pushSchedC?`<p class="lead" style="font-size:13px;margin:8px 0 0">جارٍ التحميل…</p>`:pushSchedC.err?`<p class="msg" style="text-align:start;margin-top:8px">تعذّر تحميل الرسائل المجدولة. حدّث ملف Push.gs وانشر إصدارًا جديدًا.</p>`:`
+    ${pushSchedC.list.length?`<div style="margin-top:6px">${pushSchedC.list.map(s=>`<div class="ls-row"><span style="flex:1;min-width:0"><span class="sch-body">${esc(s.body)}</span><small class="sch-when">${t12(s.time)} · ${daysTx(s.days)}${s.on?"":" · موقوفة"}</small></span><input type="checkbox" class="sch-on" data-son="${esc(s.id)}" ${s.on?"checked":""} aria-label="تشغيل الرسالة"><button class="lvl-x" data-sdel="${esc(s.id)}">حذف</button></div>`).join("")}</div>`:""}
+    <label class="fld">نص الرسالة<textarea id="psb" rows="2" maxlength="300" placeholder="مثال: لا تنسَ مراجعة البعيدة قبل النوم"></textarea></label>
+    <label class="fld">الوقت<input type="time" id="pst" value="17:00"></label>
+    <div class="sdays" id="psd">${SDN.map((d,i)=>`<button data-sd="${i}" aria-pressed="true">${d}</button>`).join("")}</div>
+    <p class="msg" id="psm" style="text-align:start"></p>
+    <button class="btn line" id="psadd">أضف الرسالة المجدولة</button>`}</div>
   <div class="card"><b>الإشعارات التلقائية</b>
     <label class="swrow"><span>تذكير يومي لمن لم يسمّع<small>من الأحد إلى الخميس</small></span><input type="checkbox" id="prem" ${C.remind?"checked":""}></label>
     <label class="swrow"><span>وقت التذكير</span><select id="phour">${hours}</select></label>
@@ -2766,6 +2789,22 @@ function renderPush(rv){
     catch(err){m.textContent="تعذّر الإرسال"}
     b.disabled=false};
   $("#ptest").onclick=async()=>{try{await api("pushTest",pushSub.endpoint);toast("أُرسل، يصلك خلال ثوانٍ")}catch(e){toast("تعذّر الإرسال")}};
+  /* الرسائل المجدولة */
+  const S=pushSchedC;if(!S||S.err)return;
+  const saveSched=async(list,okTxt)=>{const m=$("#psm");if(m){m.className="msg";m.textContent="جارٍ الحفظ…"}
+    try{const r=await api("pushSchedSet",pin,list);if(!r||!r.ok)throw 0;pushSchedC={ok:true,list:r.list,tz:S.tz};again();
+      const m2=$("#psm");if(m2){m2.className="okmsg";m2.textContent=okTxt}}
+    catch(e){const m2=$("#psm");if(m2){m2.className="msg";m2.textContent="تعذّر الحفظ، تأكد من الاتصال"}}};
+  rv.querySelectorAll("[data-sd]").forEach(b=>b.onclick=()=>b.setAttribute("aria-pressed",String(b.getAttribute("aria-pressed")!=="true")));
+  $("#psadd").onclick=()=>{const body=$("#psb").value.trim(),time=$("#pst").value,m=$("#psm"),
+      days=[...rv.querySelectorAll('[data-sd][aria-pressed="true"]')].map(b=>+b.dataset.sd);
+    m.className="msg";
+    if(!body)return m.textContent="اكتب نص الرسالة";
+    if(!/^\d{2}:\d{2}$/.test(time))return m.textContent="اختر الوقت";
+    if(!days.length)return m.textContent="اختر يومًا واحدًا على الأقل";
+    saveSched([...S.list,{body,time,days,on:true}],"أُضيفت الرسالة ✓")};
+  rv.querySelectorAll("[data-son]").forEach(c=>c.onchange=()=>saveSched(S.list.map(s=>s.id===c.dataset.son?{...s,on:c.checked}:s),c.checked?"شُغّلت ✓":"أُوقفت ✓"));
+  rv.querySelectorAll("[data-sdel]").forEach(b=>b.onclick=()=>{if(confirm("حذف هذه الرسالة المجدولة؟"))saveSched(S.list.filter(s=>s.id!==b.dataset.sdel),"حُذفت ✓")});
 }
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").then(pushSync).catch(()=>{});
 render();

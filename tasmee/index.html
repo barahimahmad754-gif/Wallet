@@ -603,6 +603,15 @@ header,body::before{background:color-mix(in srgb,var(--bg) 86%,transparent);-web
 .st.e .n b{color:var(--roseInk)}
 .st.h button{color:var(--goldInk);border-color:color-mix(in srgb,var(--gold) 40%,transparent)}
 .st.e button{color:var(--roseInk);border-color:color-mix(in srgb,var(--rose) 35%,transparent)}
+
+/* تقرير السماع */
+.ls-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.ls-row:first-child{border-top:0}
+.ls-row b{flex:1;min-width:0}
+.ls-c{font-size:12px;color:var(--muted)}
+.ls-d{font-size:12px;color:var(--muted);width:100%}
+.ls-r{font-family:var(--quran);font-size:15px;color:var(--muted)}
+.ls-p{display:flex;gap:4px;margin-inline-start:auto}
 </style>
 </head>
 <body>
@@ -2005,10 +2014,44 @@ function renderListen(rv){
   const listeners=Object.entries(s.L).map(([n,v])=>({...v,n})).sort((a,b)=>(b.idx??-1)-(a.idx??-1));
   rv.innerHTML=`${rankPeriodSeg()}
   ${!listeners.length?`<p class="empty">لم يسمع أحد لغيره في هذه الفترة.</p>`:`
-  <div class="lbl">جودة السماع</div><div class="card"><ul class="rank">${listeners.map(l=>{const[g,c]=alertTag(l.idx);return`<li data-who="${esc(l.n)}">
-    <span class="who">${esc(disp(l.n))}</span><span class="tag ${c}">${g}</span></li>`}).join("")}</ul>
+  <div class="lbl">جودة السماع <small style="font-weight:400;color:var(--muted)">اضغط على الاسم لترى التفاصيل</small></div><div class="card"><ul class="rank">${listeners.map(l=>{const[g,c]=alertTag(l.idx),L=listenOf(l.n,rs);return`<li data-lis="${esc(l.n)}">
+    <span class="who">${esc(disp(l.n))}</span><span class="tag ${c}">${g}</span>
+    <span class="meta"><span>سمع ${mrTxt(L.parts.length)}</span><span>لـ ${nf(L.by.length)} ${L.by.length===1?"طالب":L.by.length===2?"طالبين":"طلاب"}</span><span>رصد ${nf(L.hes)} تردد و${nf(L.err)} خطأ</span></span></li>`}).join("")}</ul>
     <details><summary>كيف تُحسب؟</summary><p>نقارن ما سجّله السامع من أخطاء بما يُتوقع لنفس القارئ عند غيره. السامع الذي يسجّل أقل بكثير ربما يتساهل. هذا تنبيه وليس حكمًا.</p><p>«بيانات قليلة» تعني أنه سمع لغيره أقل من ٣ مرات في هذه الفترة.</p></details></div>`}`;
   bindRank(rv);
+  rv.querySelectorAll("[data-lis]").forEach(li=>li.onclick=()=>openListener(li.dataset.lis));
+}
+/* ما سمعه الطالب لغيره في الفترة المختارة */
+const mrTxt=n=>n===1?"مرة واحدة":n===2?"مرتين":nf(n)+(n>=3&&n<=10?" مرات":" مرة");
+const caughtTx=(h,e)=>h||e?`${h?`<span class="pill h">تردد ${nf(h)}</span>`:""}${e?`<span class="pill e">خطأ ${nf(e)}</span>`:""}`:`<span class="tag t-na">لم يرصد شيئًا</span>`;
+function listenOf(n,rs){
+  const parts=[];
+  for(const r of rs)if(r.listener===n&&r.reader!==n)for(const k of["near","far"]){const p=r[k];if(p&&!p.skipped&&p.from!=null)parts.push({r,k,p})}
+  parts.sort((a,b)=>b.r.at-a.r.at);
+  const by={};
+  for(const x of parts){const o=(by[x.r.reader]??={n:0,hes:0,err:0});o.n++;o.hes+=x.p.hes||0;o.err+=x.p.err||0}
+  return{parts,hes:parts.reduce((a,x)=>a+(x.p.hes||0),0),err:parts.reduce((a,x)=>a+(x.p.err||0),0),
+    by:Object.entries(by).map(([rd,o])=>({rd,...o})).sort((a,b)=>b.n-a.n)};
+}
+/* تقرير السماع لطالب واحد */
+function openListener(n){
+  const rs=rankRecs(),L=listenOf(n,rs),st=computeStats(rs).L[n],[g,c]=alertTag(st?st.idx:null);
+  const per={week:"آخر ٧ أيام",month:"آخر ٣٠ يومًا",all:"كل المدة"}[period];
+  const why=st&&st.idx!=null?(st.idx>=0.85?"يرصد مثل ما يرصده غيره لنفس الطلاب.":st.idx>=0.5?"يرصد أقل قليلًا مما يرصده غيره لنفس الطلاب.":"يرصد أقل بكثير مما يرصده غيره لنفس الطلاب، فقد يكون متساهلًا."):"سمع لغيره أقل من ٣ مرات، فلا يكفي للحكم.";
+  const fmt=t=>new Date(t).toLocaleDateString("ar-SA",{weekday:"long",day:"numeric",month:"long"});
+  const el=document.createElement("div");el.className="sheet";
+  el.innerHTML=`<div class="sheet-bg" data-close></div><div class="sheet-in" role="dialog" aria-label="تقرير السماع">
+    <div class="ph"><b>${esc(disp(n))}</b><button class="lvl-x" data-close>إغلاق</button></div>
+    <p class="lead" style="font-size:13px;margin:0 0 12px"><span class="tag ${c}">${g}</span> ${why} <span style="white-space:nowrap">(${per})</span></p>
+    <div class="kpis"><div class="kpi"><b>${nf(L.parts.length)}</b><span>مرات السماع</span></div><div class="kpi"><b style="color:var(--goldInk)">${nf(L.hes)}</b><span>تردد رصده</span></div><div class="kpi"><b style="color:var(--roseInk)">${nf(L.err)}</b><span>خطأ رصده</span></div></div>
+    ${L.parts.length?`<div class="lbl">سمع لمن؟</div><div class="card" style="padding-top:4px;padding-bottom:4px">${L.by.map(x=>`<div class="ls-row"><b>${esc(disp(x.rd))}</b><span class="ls-c">${mrTxt(x.n)}</span><span class="ls-p">${caughtTx(x.hes,x.err)}</span></div>`).join("")}</div>
+    <div class="lbl">آخر ما سمعه</div><div class="card" style="padding-top:4px;padding-bottom:4px">${L.parts.slice(0,10).map(x=>`<div class="ls-row"><span class="ls-d">${fmt(x.r.at)}</span><b>${esc(disp(x.r.reader))}</b><span class="kind ${x.k}">${KIND[x.k]}</span><span class="ls-r">${SURAH[x.p.from]}${x.p.from!==x.p.to?" – "+SURAH[x.p.to]:""}</span><span class="ls-p">${caughtTx(x.p.hes||0,x.p.err||0)}</span></div>`).join("")}</div>`:`<p class="empty">لم يسمع لغيره في هذه الفترة.</p>`}
+    <button class="btn line" data-file style="margin-top:6px">افتح ملف ${esc(disp(n))}</button></div>`;
+  document.body.appendChild(el);
+  const close=()=>{el.remove();document.removeEventListener("keydown",esc_)};
+  const esc_=e=>{if(e.key==="Escape")close()};document.addEventListener("keydown",esc_);
+  el.querySelectorAll("[data-close]").forEach(b=>b.onclick=close);
+  el.querySelector("[data-file]").onclick=()=>{close();openFile(n)};
 }
 
 /* roster editing */

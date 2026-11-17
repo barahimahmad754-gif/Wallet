@@ -593,10 +593,8 @@ header,body::before{background:color-mix(in srgb,var(--bg) 86%,transparent);-web
 
 /* صفوف الطلاب */
 .trw.done{background:color-mix(in srgb,var(--green-soft) 55%,var(--surface));border-color:color-mix(in srgb,var(--green) 30%,transparent)}
-.sp.todo{border-color:transparent}
-.sp.todo[data-go="lesson"]{background:var(--lav-soft);color:var(--lav)}
-.sp.todo[data-go="near"]{background:var(--green-soft);color:var(--green)}
-.sp.todo[data-go="far"]{background:var(--gold-soft);color:var(--goldInk)}
+/* الدرس والقريبة والبعيدة: بلا لون حتى تُقرأ، ثم تتلوّن */
+.sp.ok{border-color:color-mix(in srgb,var(--green) 35%,transparent)}
 
 /* خانتا التردد (ذهبي) والخطأ (عنّابي) */
 .st.h{background:var(--gold-soft);border-color:color-mix(in srgb,var(--gold) 45%,transparent)}

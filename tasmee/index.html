@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F2F7F5" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0B1615" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F7F3EA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C1411" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="دفتر التسميع">
@@ -523,80 +523,88 @@ textarea.roster:focus{border-color:var(--green)}
 .swrow input[type=checkbox]:checked{background:var(--green)}
 .swrow input[type=checkbox]:checked::after{transform:translateX(-18px)}
 
-/* ===== ألوان حيّة ===== */
+/* ===== هوية أهل القرآن: زمرّد وذهب على عاجيّ ===== */
 :root{
-  --bg:#F2F7F5;--surface:#FFFFFF;--ink:#14302A;--muted:#5B6E68;--line:#DCE6E2;--fill:#E8F1EE;--segOn:#14302A;
-  --green:#0B8A66;--green-soft:#D6F5E9;--gold:#E39B0B;--gold-soft:#FFF0CC;--goldInk:#8F560A;
-  --rose:#E5484D;--rose-soft:#FFE1E1;--roseInk:#C0303A;--onGreen:#FFFFFF;
-  --blue:#0A7CC1;--blue-soft:#DCF0FD;--lav:#6D4AE0;--lav-soft:#ECE6FF;
-  --grad:linear-gradient(135deg,#0B8A66 0%,#12A296 55%,#2D7FD6 100%);
-  --glow:0 6px 18px rgba(11,138,102,.25);
-  --shadow:0 1px 2px rgba(16,48,40,.05),0 4px 14px rgba(16,48,40,.07)}
+  --bg:#F7F3EA;--surface:#FFFDF8;--ink:#1D2B26;--muted:#6B6A5E;--line:#E7DEC9;--fill:#EFE8D8;--segOn:#0E6B52;
+  --green:#0E6B52;--green-soft:#DCEEE5;--gold:#B8892B;--gold-soft:#F6ECD3;--goldInk:#7E5A12;
+  --rose:#A8323E;--rose-soft:#F6E0DF;--roseInk:#9A2A35;--onGreen:#FFFFFF;
+  --blue:#2B5C8A;--blue-soft:#E3EBF4;--lav:#2B5C8A;--lav-soft:#E3EBF4;
+  --grad:linear-gradient(160deg,#0F6B53 0%,#0B4F3E 100%);
+  --star:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23B8892B' stroke-opacity='.08' stroke-width='1'%3E%3Crect x='18' y='18' width='28' height='28'/%3E%3Crect x='18' y='18' width='28' height='28' transform='rotate(45 32 32)'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3C/g%3E%3C/svg%3E");
+  --star2:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23E9C46A' stroke-opacity='.16' stroke-width='1'%3E%3Crect x='18' y='18' width='28' height='28'/%3E%3Crect x='18' y='18' width='28' height='28' transform='rotate(45 32 32)'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3C/g%3E%3C/svg%3E");
+  --shadow:0 1px 2px rgba(60,45,10,.05),0 4px 14px rgba(60,45,10,.06);
+  --glow:0 8px 22px rgba(11,79,62,.28)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0B1615;--surface:#13221F;--ink:#E6F2EE;--muted:#98ADA6;--line:#253934;--fill:#1A2D29;--segOn:#E6F2EE;
-  --green:#34D39E;--green-soft:#12352B;--gold:#F5B83D;--gold-soft:#3A2A0E;--goldInk:#F5B83D;
-  --rose:#FF7B7F;--rose-soft:#3D1C1F;--roseInk:#FF8A8D;--onGreen:#06201A;
-  --blue:#5CB8F5;--blue-soft:#12304A;--lav:#A992FF;--lav-soft:#2A2152;
-  --grad:linear-gradient(135deg,#0E7A5C 0%,#0F8C86 55%,#2364A8 100%);
-  --glow:0 6px 18px rgba(0,0,0,.35);--shadow:0 1px 2px rgba(0,0,0,.35)}}
+  --bg:#0C1411;--surface:#14201C;--ink:#EDE8DA;--muted:#A4A493;--line:#2A3830;--fill:#1B2A24;--segOn:#EDE8DA;
+  --green:#4CC495;--green-soft:#153328;--gold:#D9B25C;--gold-soft:#33290F;--goldInk:#E2BF6E;
+  --rose:#E07A7E;--rose-soft:#3A1C1F;--roseInk:#EE8F93;--onGreen:#0C1411;
+  --blue:#8FB3DC;--blue-soft:#1A2B3D;--lav:#8FB3DC;--lav-soft:#1A2B3D;
+  --grad:linear-gradient(160deg,#0F5E49 0%,#0A3F32 100%);
+  --shadow:0 1px 2px rgba(0,0,0,.35);--glow:0 8px 22px rgba(0,0,0,.4)}}
 :root[data-theme="dark"]{
-  --bg:#0B1615;--surface:#13221F;--ink:#E6F2EE;--muted:#98ADA6;--line:#253934;--fill:#1A2D29;--segOn:#E6F2EE;
-  --green:#34D39E;--green-soft:#12352B;--gold:#F5B83D;--gold-soft:#3A2A0E;--goldInk:#F5B83D;
-  --rose:#FF7B7F;--rose-soft:#3D1C1F;--roseInk:#FF8A8D;--onGreen:#06201A;
-  --blue:#5CB8F5;--blue-soft:#12304A;--lav:#A992FF;--lav-soft:#2A2152;
-  --grad:linear-gradient(135deg,#0E7A5C 0%,#0F8C86 55%,#2364A8 100%);
-  --glow:0 6px 18px rgba(0,0,0,.35);--shadow:0 1px 2px rgba(0,0,0,.35)}
+  --bg:#0C1411;--surface:#14201C;--ink:#EDE8DA;--muted:#A4A493;--line:#2A3830;--fill:#1B2A24;--segOn:#EDE8DA;
+  --green:#4CC495;--green-soft:#153328;--gold:#D9B25C;--gold-soft:#33290F;--goldInk:#E2BF6E;
+  --rose:#E07A7E;--rose-soft:#3A1C1F;--roseInk:#EE8F93;--onGreen:#0C1411;
+  --blue:#8FB3DC;--blue-soft:#1A2B3D;--lav:#8FB3DC;--lav-soft:#1A2B3D;
+  --grad:linear-gradient(160deg,#0F5E49 0%,#0A3F32 100%);
+  --shadow:0 1px 2px rgba(0,0,0,.35);--glow:0 8px 22px rgba(0,0,0,.4)}
 
-/* خلفية بلمسة لون، ورأس شفاف */
-body{background:radial-gradient(1100px 520px at 100% -8%,color-mix(in srgb,var(--blue) 16%,transparent),transparent 62%),radial-gradient(900px 520px at -10% 4%,color-mix(in srgb,var(--green) 16%,transparent),transparent 62%),var(--bg);background-attachment:fixed}
-header,body::before{background:color-mix(in srgb,var(--bg) 80%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-.bmark{background:var(--grad)}
-.btxt h1,.welcome h2{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* خلفية عاجية بزخرفة هندسية خفيفة */
+body{background:var(--star) 0 0/64px 64px,var(--bg);background-attachment:fixed}
+header,body::before{background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.bmark{background:var(--gold)}
+.btxt h1{color:var(--green)}
+.wlogo{background:var(--green)}
+.welcome h2{font-family:var(--quran);font-size:26px;color:var(--green)}
+.lbl{color:var(--goldInk);font-weight:700}
 
-/* البطاقات */
-.card,.trw,.kpi,.myday,.pickgrid button,.nm,.upill,.dayseg button,.rtabs button{border-color:transparent;box-shadow:var(--shadow)}
-.tnav{border-top-color:transparent;box-shadow:0 -4px 20px rgba(16,48,40,.08)}
+/* البطاقات: سطح عاجي وحدّ ذهبي رقيق */
+.card,.trw,.kpi,.myday,.pickgrid button,.nm,.upill,.dayseg button,.rtabs button,.tcount div{border-color:var(--line);box-shadow:var(--shadow)}
+.tnav{border-top:1px solid var(--line);box-shadow:0 -4px 18px rgba(60,45,10,.06)}
 
-/* بطاقة «اليوم» الرئيسية */
-.tdtop{background:var(--grad);border:0;color:#fff;box-shadow:var(--glow)}
-.tdtop .date,.tdtop .big span,.tdtop .tleg{color:rgba(255,255,255,.88)}
-.tdtop .big b{color:#fff}
-.tdtop .tseg i{background:rgba(255,255,255,.22)}
-.tdtop .tseg i.d{background:#fff}
-.tdtop .tseg i.p{background:#FFD166}
-.tdtop .tleg span:nth-child(1) i{background:#fff!important}
-.tdtop .tleg span:nth-child(2) i{background:#FFD166!important}
-.tdtop .tleg span:nth-child(3) i{background:rgba(255,255,255,.3)!important}
+/* بطاقة «اليوم»: زمرّدية بزخرفة ذهبية */
+.tdtop{background:var(--star2) 0 0/64px 64px,var(--grad);border:1px solid rgba(233,196,106,.45);color:#fff;box-shadow:var(--glow)}
+.tdtop .date,.tdtop .big span,.tdtop .tleg{color:rgba(255,255,255,.86)}
+.tdtop .big b{color:#F3D58A;font-family:var(--quran);font-size:40px}
+.tdtop .tseg i{background:rgba(255,255,255,.16)}
+.tdtop .tseg i.d{background:#E9C46A}
+.tdtop .tseg i.p{background:rgba(255,255,255,.7)}
+.tdtop .tleg span:nth-child(1) i{background:#E9C46A!important}
+.tdtop .tleg span:nth-child(2) i{background:rgba(255,255,255,.7)!important}
+.tdtop .tleg span:nth-child(3) i{background:rgba(255,255,255,.22)!important}
 
-/* عدّادات ملوّنة */
-.tcount div{border:0;box-shadow:none}
-.tcount div:nth-child(1){background:var(--lav-soft);color:var(--lav)}
-.tcount div:nth-child(2){background:var(--green-soft);color:var(--green)}
-.tcount div:nth-child(3){background:var(--gold-soft);color:var(--goldInk)}
-.tcount div b{color:inherit}
+/* عدّادات: الدروس لازوردي، القريبة زمرّدي، البعيدة ذهبي */
+.tcount div:nth-child(1){background:var(--lav-soft);color:var(--lav);border-color:transparent}
+.tcount div:nth-child(2){background:var(--green-soft);color:var(--green);border-color:transparent}
+.tcount div:nth-child(3){background:var(--gold-soft);color:var(--goldInk);border-color:transparent}
+.tcount div b{color:inherit;font-family:var(--quran);font-size:22px}
 .kpi:nth-child(3n+1){border-top:3px solid var(--green)}
-.kpi:nth-child(3n+2){border-top:3px solid var(--blue)}
-.kpi:nth-child(3n){border-top:3px solid var(--gold)}
+.kpi:nth-child(3n+2){border-top:3px solid var(--gold)}
+.kpi:nth-child(3n){border-top:3px solid var(--blue)}
 
 /* أزرار وتبويبات */
 .btn:not(.line):not(.ghost){background:var(--grad);color:#fff;box-shadow:var(--glow)}
 .tabs button[aria-selected="true"],.seg button[aria-pressed="true"],.seg2 button[aria-pressed="true"],.rtabs button[aria-pressed="true"]{background:var(--grad);color:#fff;border-color:transparent}
-.tnav button[aria-current="page"] svg{box-sizing:content-box;padding:3px 16px;border-radius:999px;background:var(--green-soft)}
+.tnav button[aria-current="page"]{color:var(--green)}
+.tnav button[aria-current="page"] svg{box-sizing:content-box;padding:3px 16px;border-radius:999px;background:var(--gold-soft);color:var(--green)}
 .me{background:var(--grad);color:#fff}
-.me button{color:#fff}
+.me button{color:#F3D58A}
+.nm[aria-pressed="true"]{background:var(--grad);color:#fff;border-color:transparent}
 
-/* لمسة لون جانبية للأسماء والطلاب */
-.pickgrid button{border-inline-start:4px solid var(--green)}
-.pickgrid button:nth-child(4n+2){border-inline-start-color:var(--blue)}
-.pickgrid button:nth-child(4n+3){border-inline-start-color:var(--lav)}
-.pickgrid button:nth-child(4n){border-inline-start-color:var(--gold)}
-.trw{border-inline-start:4px solid color-mix(in srgb,var(--blue) 40%,transparent)}
-.trw.done{border-inline-start-color:var(--green);background:color-mix(in srgb,var(--green-soft) 55%,transparent)}
-.nm[aria-pressed="true"]{background:var(--grad);color:#fff}
+/* صفوف الطلاب */
+.trw.done{background:color-mix(in srgb,var(--green-soft) 55%,var(--surface));border-color:color-mix(in srgb,var(--green) 30%,transparent)}
 .sp.todo{border-color:transparent}
 .sp.todo[data-go="lesson"]{background:var(--lav-soft);color:var(--lav)}
 .sp.todo[data-go="near"]{background:var(--green-soft);color:var(--green)}
 .sp.todo[data-go="far"]{background:var(--gold-soft);color:var(--goldInk)}
+
+/* خانتا التردد (ذهبي) والخطأ (عنّابي) */
+.st.h{background:var(--gold-soft);border-color:color-mix(in srgb,var(--gold) 45%,transparent)}
+.st.e{background:var(--rose-soft);border-color:color-mix(in srgb,var(--rose) 40%,transparent)}
+.st.h .n b{color:var(--goldInk)}
+.st.e .n b{color:var(--roseInk)}
+.st.h button{color:var(--goldInk);border-color:color-mix(in srgb,var(--gold) 40%,transparent)}
+.st.e button{color:var(--roseInk);border-color:color-mix(in srgb,var(--rose) 35%,transparent)}
 </style>
 </head>
 <body>

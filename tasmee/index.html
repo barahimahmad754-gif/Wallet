@@ -677,7 +677,9 @@ let recDayMode="t";
 const yKey=()=>dayKey(Date.now()-864e5);
 const dayOf=()=>recDayMode==="y"?yKey():today();
 const recAt=()=>recDayMode==="y"?Date.now()-864e5:Date.now();
-const saveLabel=()=>F.editId?"احفظ التعديل":"احفظ التسميع";
+const saveLabel=()=>F.editId?"احفظ التعديل":recDayMode==="y"?"احفظ التسميع لأمس":"احفظ التسميع";
+/* المعلم فقط: يختار هل يسجّل لليوم أو لأمس */
+const dayPick=()=>F.editId?"":`<div class="dayseg" id="rday"><button data-dm="t" aria-pressed="${recDayMode==="t"}">اليوم</button><button data-dm="y" aria-pressed="${recDayMode==="y"}">أمس (${new Date(Date.now()-864e5).toLocaleDateString("ar-SA",{weekday:"long"})})</button></div>`;
 function hashName(s){let h=2166136261;for(const c of s){h^=c.codePointAt(0);h=Math.imul(h,16777619)>>>0}return h.toString(36)}
 const lockId=(reader,part,day=dayOf())=>`${day}_${hashName(reader)}_${part}`;
 function disp(full){
@@ -1134,7 +1136,7 @@ function renderAdd(){
   $("#savebar").style.display="";
   if(F.reader)fixChoice();
   view.innerHTML=`
-  ${me==="المعلم"?subSeg("rec","rec"):myDayHtml()}
+  ${me==="المعلم"?subSeg("rec","rec")+dayPick():myDayHtml()}
   ${me==="المعلم"?"":`<div id="pushbar"></div>`}
   <div id="lvl"></div>
   ${F.editId?`<p class="ybanner">تعدّل تسميع <b>${F.reader===me?"نفسك":esc(disp(F.reader))}</b> <button class="chg" id="cancelEdit">إلغاء التعديل</button></p>`:""}
@@ -1146,6 +1148,8 @@ function renderAdd(){
   $("#savebar").classList.toggle("idle",!(F.reader&&F.choice));
   $("#save").textContent=saveLabel();
   bindTmode();
+  view.querySelectorAll("#rday [data-dm]").forEach(b=>b.onclick=()=>{if(recDayMode===b.dataset.dm)return;
+    recDayMode=b.dataset.dm;locks={};F={reader:"",near:blank(),far:blank(),touched:false};$("#msg").textContent="";renderAdd();loadPublic()});
   if($("#cancelEdit"))$("#cancelEdit").onclick=()=>{F={reader:"",near:blank(),far:blank(),touched:false};$("#msg").textContent="";renderAdd()};
   paintChips();paintLevel();paintPush();view.querySelectorAll("[data-ch]").forEach(b=>b.onclick=()=>setChoice(b.dataset.ch));bindAdd();renderMine();
 }

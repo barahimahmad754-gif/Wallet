@@ -1004,9 +1004,9 @@ function renderBrand(rv){
 /* ---------- shell: header (brand + user), bottom navigation for the teacher ----------
    four sections instead of a long row of tabs:
    اليوم · تسجيل (درس | مراجعة) · الطلاب (القائمة | الحضور | الترتيب) · المزيد */
-const SECS={today:["today","watch"],rec:["lesson"],students:["students","att","rank","plans"],more:["more","push","rpt","names","brand","data","ai"]};
+const SECS={today:["today","watch"],rec:["lesson"],students:["students","att","rank","listen","plans"],more:["more","push","rpt","names","brand","data","ai"]};
 const secOf=t=>Object.keys(SECS).find(k=>SECS[k].includes(t))||"more";
-const SUBS={today:[["today","اليوم"],["watch","تعثرات الأسبوع"]],rec:[["lesson","درس جديد"],["rec","مراجعة"]],students:[["students","الطلاب"],["att","الحضور"],["rank","الترتيب"]]};
+const SUBS={today:[["today","اليوم"],["watch","تعثرات الأسبوع"]],rec:[["lesson","درس جديد"],["rec","مراجعة"]],students:[["students","الطلاب"],["att","الحضور"],["rank","الترتيب"],["listen","جودة السماع"]]};
 let navSec="";
 const subSeg=(sec,act)=>SUBS[sec]&&!(sec==="rec"&&!tpin)?`<div class="seg2">${SUBS[sec].map(([k,t])=>`<button data-sub="${k}" aria-pressed="${act===k}">${t}</button>`).join("")}</div>`:"";
 function shell(nav){
@@ -1404,6 +1404,7 @@ function renderRoom(){
   else if(rtab==="students")renderStudents(rv);
   else if(rtab==="att")renderAtt(rv);
   else if(rtab==="rank")renderRank(rv);
+  else if(rtab==="listen")renderListen(rv);
   else if(rtab==="more")renderMore(rv);
   else if(rtab==="push")renderPush(rv);
   else if(rtab==="rpt")renderReports(rv);
@@ -1973,20 +1974,34 @@ function computeStats(rs){
   return{R,L};
 }
 function alertTag(i){if(i==null)return["بيانات قليلة","t-na"];if(i>=0.85)return["يقظ","t-good"];if(i>=0.5)return["متوسط","t-mid"];return["قد يكون متساهلًا","t-bad"]}
+const rankRecs=()=>{const d={week:7,month:30,all:1e5}[period];return records.filter(r=>r.at>=Date.now()-d*864e5)};
+const rankPeriodSeg=()=>`<div class="seg">${[["week","أسبوع"],["month","شهر"],["all","الكل"]].map(([k,t])=>`<button data-p="${k}" aria-pressed="${period===k}">${t}</button>`).join("")}</div>`;
+function bindRank(rv){
+  rv.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{period=b.dataset.p;renderRoom()});
+  rv.querySelectorAll("[data-who]").forEach(li=>li.onclick=()=>openFile(li.dataset.who));
+}
+/* الترتيب: جودة القارئ فقط */
 function renderRank(rv){
-  const d={week:7,month:30,all:1e5}[period],rs=records.filter(r=>r.at>=Date.now()-d*864e5),s=computeStats(rs);
+  const rs=rankRecs(),s=computeStats(rs);
   const readers=Object.entries(s.R).map(([n,v])=>({...v,n,sc:scoreOf(v.pts,v.pg)})).sort((a,b)=>b.sc-a.sc);
-  const listeners=Object.entries(s.L).map(([n,v])=>({...v,n})).sort((a,b)=>(b.idx??-1)-(a.idx??-1));
-  rv.innerHTML=`<div class="seg">${[["week","أسبوع"],["month","شهر"],["all","الكل"]].map(([k,t])=>`<button data-p="${k}" aria-pressed="${period===k}">${t}</button>`).join("")}</div>
+  rv.innerHTML=`${rankPeriodSeg()}
   ${!rs.length?`<p class="empty">لا يوجد تسميع في هذه الفترة.</p>`:`
   <div class="lbl">جودة القارئ</div><div class="card"><ul class="rank">${readers.map(r=>{const[g,c]=grade(r.sc);return`<li data-who="${esc(r.n)}">
     <span class="who">${esc(disp(r.n))}</span><span><span class="tag ${c}">${g}</span> <span class="sc">${nf(r.sc)}٪</span></span>
-    <span class="bar"><i style="width:${r.sc}%;background:var(${c==="t-bad"?"--rose":c==="t-mid"?"--gold":"--green"})"></i></span></li>`}).join("")}</ul></div>
-  <div class="lbl">جودة السامع</div><div class="card"><ul class="rank">${listeners.map(l=>{const[g,c]=alertTag(l.idx);return`<li data-who="${esc(l.n)}">
+    <span class="bar"><i style="width:${r.sc}%;background:var(${c==="t-bad"?"--rose":c==="t-mid"?"--gold":"--green"})"></i></span></li>`}).join("")}</ul>
+    <details><summary>كيف تُحسب؟</summary><p>كل خطأ بنقطة وكل تردد بنصف نقطة، مقسومة على عدد الصفحات.</p></details></div>`}`;
+  bindRank(rv);
+}
+/* جودة السماع: في خانة مستقلة */
+function renderListen(rv){
+  const rs=rankRecs(),s=computeStats(rs);
+  const listeners=Object.entries(s.L).map(([n,v])=>({...v,n})).sort((a,b)=>(b.idx??-1)-(a.idx??-1));
+  rv.innerHTML=`${rankPeriodSeg()}
+  ${!listeners.length?`<p class="empty">لم يسمع أحد لغيره في هذه الفترة.</p>`:`
+  <div class="lbl">جودة السماع</div><div class="card"><ul class="rank">${listeners.map(l=>{const[g,c]=alertTag(l.idx);return`<li data-who="${esc(l.n)}">
     <span class="who">${esc(disp(l.n))}</span><span class="tag ${c}">${g}</span></li>`}).join("")}</ul>
-    <details><summary>كيف تُحسب؟</summary><p>القارئ: كل خطأ بنقطة وكل تردد بنصف نقطة، مقسومة على عدد الصفحات.</p><p>السامع: نقارن ما سجّله من أخطاء بما يُتوقع لنفس القارئ عند غيره. السامع الذي يسجّل أقل بكثير ربما يتساهل. هذا تنبيه وليس حكمًا.</p></details></div>`}`;
-  rv.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{period=b.dataset.p;renderRoom()});
-  rv.querySelectorAll("[data-who]").forEach(li=>li.onclick=()=>openFile(li.dataset.who));
+    <details><summary>كيف تُحسب؟</summary><p>نقارن ما سجّله السامع من أخطاء بما يُتوقع لنفس القارئ عند غيره. السامع الذي يسجّل أقل بكثير ربما يتساهل. هذا تنبيه وليس حكمًا.</p><p>«بيانات قليلة» تعني أنه سمع لغيره أقل من ٣ مرات في هذه الفترة.</p></details></div>`}`;
+  bindRank(rv);
 }
 
 /* roster editing */
